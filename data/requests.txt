@@ -1,0 +1,25 @@
+Explain a practical order for optimizing a CUDA kernel.
+Summarize the difference between RMSNorm and LayerNorm.
+What problem does rotary positional embedding solve?
+Describe grouped-query attention in simple terms.
+Why does Llama use SwiGLU instead of a plain MLP block?
+How does causal masking work during autoregressive generation?
+What is the difference between logits and probabilities?
+Explain why batch padding needs valid sequence lengths.
+What are the main steps in a transformer forward pass?
+How would you debug NaNs in a CUDA attention kernel?
+Why can greedy decoding produce repetitive text?
+Compare learned positional embeddings with RoPE.
+What does the q_proj weight do in self-attention?
+What does the k_proj weight do in self-attention?
+What does the v_proj weight do in self-attention?
+What does the o_proj weight do after attention?
+Why is the LM head often tied to the token embedding matrix?
+Explain the role of the context window during generation.
+How do EOS tokens stop text generation?
+Why is BF16 popular for large language model inference?
+What is the benefit of validating GPU output against a CPU reference?
+Describe the difference between throughput and latency.
+What are common memory bottlenecks in transformer inference?
+Why is softmax implemented with a max-subtraction trick?
+How would you explain tensor shapes to someone new to transformers?

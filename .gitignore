@@ -1,0 +1,6 @@
+main
+obj/
+data/logits*.bin
+data/generated_tokens*.bin
+data/responses*.txt
+scripts/__pycache__/
