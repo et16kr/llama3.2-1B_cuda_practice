@@ -32,6 +32,8 @@ CUDA 연습용 Llama 3.2 1B inference 프로젝트입니다.
 ## 프로젝트 구성
 
 - `scripts/run_text_generation.py`: 기본 실행 진입점. text 입력 tokenize, `main` 호출, 결과 decode
+- `scripts/build_hf_verified_request_bank.py`: Hugging Face로 응답 품질을 확인해 요청 뱅크 생성
+- `scripts/sample_requests.py`: 요청 뱅크에서 원하는 개수만 랜덤 샘플링
 - `src/main.cpp`: Python wrapper가 호출하는 tokenized generation/forward-only 엔트리 포인트
 - `src/app_options.cpp`: CLI 파싱
 - `src/generation.cpp`: batch generation 루프
@@ -115,6 +117,27 @@ Python wrapper가 내부적으로 token file을 만들어 `main`을 호출합니
 
 저장소에는 샘플 `bin` 파일을 포함하지 않습니다. 필요하면 Python wrapper가 만드는 token batch를 재사용하거나, 같은 포맷으로 직접 만들면 됩니다.
 
+### 5. Hugging Face 기준 요청 뱅크 생성
+
+Hugging Face 모델로 응답을 확인해, 품질이 불안정한 요청을 제외한 뱅크를 만들 수 있습니다.
+
+```bash
+python3 ./scripts/build_hf_verified_request_bank.py \
+        --model-dir /path/to/Llama-3.2-1B-Instruct \
+        --count 1200 \
+        --output ./data/hf_verified_request_bank.txt
+```
+
+생성된 요청 뱅크에서 원하는 개수만 무작위로 추출하려면:
+
+```bash
+python3 ./scripts/sample_requests.py \
+        --input ./data/hf_verified_request_bank.txt \
+        --output ./data/requests.txt \
+        --count 1024 \
+        --seed 20260311
+```
+
 ## 현재 상태
 
 - `llama_forward()`는 CPU 기준 경로를 사용합니다.
@@ -142,5 +165,5 @@ Python wrapper가 내부적으로 token file을 만들어 `main`을 호출합니
 ## 주의
 
 - 현재 구현은 학습용 CPU reference 중심입니다. 긴 컨텍스트에서는 느립니다.
-- RoPE long-context scaling의 세부 확장 규칙은 아직 반영하지 않았습니다.
+- 현재 로더와 CPU reference는 Llama 3 계열 `rope_scaling` 설정을 반영합니다.
 - 출력 품질은 Python wrapper가 사용하는 tokenizer의 chat template와 local model 파일 상태에 따라 달라집니다.
