@@ -20,7 +20,7 @@ CUDA 연습용 Llama 3.2 1B inference 프로젝트입니다.
 - CUDA Toolkit과 `nvcc`
 - C++17 지원 컴파일러
 - Python 3
-- Python 패키지: `transformers`, `tokenizers`, `sentencepiece`
+- Python 패키지: `transformers`, `tokenizers`, `sentencepiece`, `jinja2`
 - 로컬 모델 디렉터리
 
 모델 디렉터리에는 최소한 아래 파일들이 있어야 합니다.
@@ -84,7 +84,7 @@ python3 ./scripts/run_text_generation.py \
         --output ./data/responses.txt
 ```
 
-출력 파일은 답변 사이를 구분하는 텍스트 delimiter와 함께 저장됩니다.
+출력 파일은 각 요청과 그에 대응하는 답변을 delimiter와 함께 저장합니다.
 
 ### 2. 한 번만 요청하기
 

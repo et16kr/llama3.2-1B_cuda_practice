@@ -8,6 +8,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -18,7 +20,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output", type=Path, default=Path("./data/responses.txt"))
     parser.add_argument("--prompt", help="Single request without an input file")
     parser.add_argument("--system", default="", help="Optional system prompt")
-    parser.add_argument("--main-binary", type=Path, default=Path("./main"))
+    parser.add_argument("--main-binary", type=Path, default=PROJECT_ROOT / "main")
     parser.add_argument("--max-new-tokens", type=int, default=64)
     parser.add_argument("--context-len", type=int, default=0)
     parser.add_argument("--validate", action="store_true")
@@ -57,10 +59,19 @@ def encode_request(tokenizer, request: str, system_prompt: str) -> list[int]:
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": request})
-        return tokenizer.apply_chat_template(
+        encoded = tokenizer.apply_chat_template(
             messages,
             tokenize=True,
             add_generation_prompt=True,
+        )
+        if isinstance(encoded, list):
+            return encoded
+        if hasattr(encoded, "get"):
+            input_ids = encoded.get("input_ids")
+            if isinstance(input_ids, list):
+                return input_ids
+        raise TypeError(
+            f"unsupported chat template return type: {type(encoded).__name__}"
         )
 
     text = request if not system_prompt else f"{system_prompt}\n\n{request}"
@@ -107,10 +118,15 @@ def decode_responses(tokenizer, sequences: list[list[int]]) -> list[str]:
     ]
 
 
-def write_responses(path: Path, responses: list[str]) -> None:
+def write_responses(path: Path, requests: list[str], responses: list[str]) -> None:
+    if len(requests) != len(responses):
+        raise ValueError("request/response count mismatch")
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as f:
-        for idx, response in enumerate(responses, start=1):
+        for idx, (request, response) in enumerate(zip(requests, responses), start=1):
+            f.write(f"===== REQUEST {idx} =====\n")
+            f.write(request)
+            f.write("\n\n")
             f.write(f"===== RESPONSE {idx} =====\n")
             f.write(response)
             f.write("\n")
@@ -167,7 +183,7 @@ def main() -> int:
         write_token_batch(prompt_tokens, sequences, pad_token_id)
         run_main(args, prompt_tokens, output_tokens)
         responses = decode_responses(tokenizer, read_token_batch(output_tokens))
-        write_responses(args.output, responses)
+        write_responses(args.output, requests, responses)
 
         if args.keep_temp:
             keep_dir = args.output.parent / f"{args.output.stem}.tmp"
