@@ -1,25 +1,1024 @@
-Explain a practical order for optimizing a CUDA kernel.
-Summarize the difference between RMSNorm and LayerNorm.
-What problem does rotary positional embedding solve?
-Describe grouped-query attention in simple terms.
-Why does Llama use SwiGLU instead of a plain MLP block?
-How does causal masking work during autoregressive generation?
-What is the difference between logits and probabilities?
-Explain why batch padding needs valid sequence lengths.
-What are the main steps in a transformer forward pass?
-How would you debug NaNs in a CUDA attention kernel?
-Why can greedy decoding produce repetitive text?
-Compare learned positional embeddings with RoPE.
-What does the q_proj weight do in self-attention?
-What does the k_proj weight do in self-attention?
-What does the v_proj weight do in self-attention?
-What does the o_proj weight do after attention?
-Why is the LM head often tied to the token embedding matrix?
-Explain the role of the context window during generation.
-How do EOS tokens stop text generation?
-Why is BF16 popular for large language model inference?
-What is the benefit of validating GPU output against a CPU reference?
-Describe the difference between throughput and latency.
-What are common memory bottlenecks in transformer inference?
-Why is softmax implemented with a max-subtraction trick?
-How would you explain tensor shapes to someone new to transformers?
+Why is the query projection in self-attention important in a transformer language model?
+How should an engineer read the shape of value states in self-attention during debugging?
+Why is the shape of the context tensor important for correctness?
+How would you teach top-k sampling to a student implementing a transformer from scratch?
+How should an engineer read the shape of the feed-forward activation tensor during debugging?
+What should a new engineer remember about nucleus sampling?
+Give an intuitive explanation of the attention score matrix for GPU inference work.
+Explain why the intermediate size in the feed-forward block matters when bringing up a new transformer inference stack.
+Summarize numerical stability in transformer inference without using equations.
+How would you describe the dimensions of key states in self-attention to a beginner?
+Why is that shape used for value states in self-attention?
+What should a new engineer remember about feed-forward networks in transformers?
+Give a concise explanation of prompt length versus generation length in the context of autoregressive text generation.
+What is the main idea behind splitting hidden states into attention heads in a modern transformer?
+Describe the role of rotary angle frequencies during text generation.
+Why does an inference implementation need residual connections?
+Summarize the value states tensor in self-attention without using equations.
+Give an intuitive explanation of the value projection in self-attention for GPU inference work.
+How would you teach debugging NaNs in model outputs to a student implementing a transformer from scratch?
+Why is the token embedding matrix important in a transformer language model?
+Summarize the float16 data type without using equations.
+What problem does the token embedding matrix solve in transformer inference?
+Give a practical explanation of pinned host memory for debugging model outputs.
+Explain the sequence length dimension in simple terms for someone learning transformer inference.
+How would you debug problems caused by a broken attention mask in transformer inference?
+What problem does greedy decoding solve in transformer inference?
+Summarize attention masks without using equations.
+Why might an inference engineer choose query projection instead of key projection?
+Explain the feed-forward activation tensor in simple terms for someone learning transformer inference.
+What should a new engineer remember about cross-attention?
+How would you teach the language modeling head to a student implementing a transformer from scratch?
+Explain why probabilities after softmax matters when bringing up a new transformer inference stack.
+Describe the practical difference between bfloat16 and float16.
+What is the difference between a key-value cache and full recomputation in a transformer model?
+Give a short practical explanation of the key-value cache.
+What is the difference between batching and single-request inference in a transformer model?
+What problem does merging attention heads solve in transformer inference?
+Give an intuitive explanation of chat templates in instruction-tuned models for GPU inference work.
+Give an intuitive explanation of layer normalization for GPU inference work.
+Give an intuitive explanation of the normalization epsilon constant for GPU inference work.
+What is a safe first step when investigating invalid padding lengths?
+Explain why feed-forward networks in transformers matters when bringing up a new transformer inference stack.
+Give a short comparison of bfloat16 versus float16.
+Describe the role of the head dimension during text generation.
+How does valid sequence lengths in padded batches influence correctness or stability during inference?
+Why does the transformer block keep the attention score tensor around?
+Give a concise explanation of warp divergence in the context of autoregressive text generation.
+What problem does warp divergence solve in transformer inference?
+Summarize cross-attention without using equations.
+What information flows through the padding mask?
+Explain why the key states tensor in self-attention matters when bringing up a new transformer inference stack.
+How does tensor cores influence correctness or stability during inference?
+Why is softmax normalization important in a transformer language model?
+How does kernel launch overhead influence correctness or stability during inference?
+What is the difference between validation tests and performance benchmarks in a transformer model?
+Give an intuitive explanation of prompt padding for GPU inference work.
+Explain why the end-of-sequence token matters when bringing up a new transformer inference stack.
+What should a new engineer remember about the attention output projection?
+Give a concise explanation of left padding versus right padding for decoder-only models in the context of autoregressive text generation.
+How would you teach the query projection in self-attention to a student implementing a transformer from scratch?
+Summarize prompt tokenization without using equations.
+What does the attention output projection matrix do in self-attention?
+How does root mean square normalization influence correctness or stability during inference?
+Give a short practical explanation of the value projection matrix.
+Describe the practical difference between causal masking and padding masking.
+How would you teach the value states tensor in self-attention to a student implementing a transformer from scratch?
+Explain why root mean square normalization matters when bringing up a new transformer inference stack.
+Give a practical explanation of rotary angle frequencies for debugging model outputs.
+Give an intuitive explanation of the attention probability matrix for GPU inference work.
+Give an intuitive explanation of the feed-forward activation tensor for GPU inference work.
+Give a practical explanation of memory coalescing on a GPU for debugging model outputs.
+What problem does valid sequence lengths in padded batches solve in transformer inference?
+Describe the job of the context tensor in plain language.
+Explain left padding versus right padding for decoder-only models in simple terms for someone learning transformer inference.
+Why does an inference implementation need the autoregressive generation loop?
+How do greedy decoding and sampling affect model behavior differently?
+Why is the feed-forward network needed during autoregressive generation?
+Why is chat templates in instruction-tuned models important in a transformer language model?
+What should a new engineer remember about causal attention masks?
+Summarize merging attention heads without using equations.
+Describe the role of chat templates in instruction-tuned models during text generation.
+Why does an inference implementation need the normalization epsilon constant?
+How does prompt tokenization influence correctness or stability during inference?
+What does the query projection matrix do in self-attention?
+Summarize prompt padding without using equations.
+Compare an end-of-sequence token and a padding token in transformer inference.
+Give a concise explanation of the attention output projection in the context of autoregressive text generation.
+What should a new engineer remember about splitting hidden states into attention heads?
+Explain residual connections in simple terms for someone learning transformer inference.
+How would you debug problems caused by incorrect causal masks in transformer inference?
+Why is the causal attention mask needed during autoregressive generation?
+What information flows through the attention output projection matrix?
+Summarize the token embedding matrix without using equations.
+What is the main idea behind rotary angle frequencies in a modern transformer?
+Explain the max-subtraction trick in softmax in simple terms for someone learning transformer inference.
+Why might an inference engineer choose a key-value cache instead of full recomputation?
+Summarize temperature in text generation without using equations.
+Why is shared memory reuse important in a transformer language model?
+What is the main idea behind the key states tensor in self-attention in a modern transformer?
+What problem does the batch dimension solve in transformer inference?
+What is the main idea behind the language modeling head in a modern transformer?
+How would you teach softmax normalization to a student implementing a transformer from scratch?
+How does residual connections influence correctness or stability during inference?
+What does the SwiGLU activation pattern do in self-attention?
+Why does an inference implementation need the value states tensor in self-attention?
+What problem does the end-of-sequence token solve in transformer inference?
+How does batch-major tensor layout influence correctness or stability during inference?
+Why is that shape used for the attention score matrix?
+Explain the tensor shape of query states in self-attention in a transformer.
+What problem does residual connections solve in transformer inference?
+Summarize asynchronous memory copies without using equations.
+Explain why layer normalization matters when bringing up a new transformer inference stack.
+Give a short practical explanation of the key projection matrix.
+Give a concise explanation of batch-major tensor layout in the context of autoregressive text generation.
+Give a practical explanation of throughput for debugging model outputs.
+Describe the role of prompt tokenization during text generation.
+What problem does token embeddings solve in transformer inference?
+Give a concise explanation of prompt truncation in the context of autoregressive text generation.
+Why might an inference engineer choose value projection instead of attention output projection?
+Explain the purpose of the key projection matrix inside a transformer block.
+What is the most likely failure mode behind mismatched tensor shapes?
+Why is the attention output projection important in a transformer language model?
+Describe the role of the attention output projection during text generation.
+Explain why the query projection in self-attention matters when bringing up a new transformer inference stack.
+How would you debug problems caused by underflow in attention probabilities in transformer inference?
+Summarize tensor shapes in attention without using equations.
+Describe the role of occupancy on a CUDA GPU during text generation.
+Explain the attention output projection in simple terms for someone learning transformer inference.
+What should a new engineer remember about the key projection in self-attention?
+What is the difference between shared memory and global memory in a transformer model?
+Explain the tensor shape of the padding mask tensor in a transformer.
+Why is the key projection in self-attention important in a transformer language model?
+Give a concise explanation of the vocabulary dimension of logits in the context of autoregressive text generation.
+Give an intuitive explanation of sharing key-value heads across query heads for GPU inference work.
+What is the main idea behind asynchronous memory copies in a modern transformer?
+When would you prefer a key-value cache over full recomputation in inference code?
+Describe the role of top-k sampling during text generation.
+What is the main idea behind nucleus sampling in a modern transformer?
+Give a concise explanation of the key states tensor in self-attention in the context of autoregressive text generation.
+Explain greedy decoding in simple terms for someone learning transformer inference.
+What is the main idea behind chat templates in instruction-tuned models in a modern transformer?
+What problem does the value states tensor in self-attention solve in transformer inference?
+Give a practical explanation of autoregressive next-token prediction for debugging model outputs.
+How would you narrow down uncoalesced memory accesses in an attention kernel?
+How can you detect incorrect causal masks early during model bring-up?
+Explain the purpose of the attention output projection matrix inside a transformer block.
+What is the main idea behind root mean square normalization in a modern transformer?
+Why does an inference implementation need rotary positional embeddings?
+What would break if the token embedding matrix were wrong?
+How would you narrow down a broken key-value cache in an attention kernel?
+How do validation tests and performance benchmarks affect model behavior differently?
+Describe the job of the query projection matrix in plain language.
+What is a safe first step when investigating NaNs after softmax?
+Explain why memory coalescing on a GPU matters when bringing up a new transformer inference stack.
+Explain the key states tensor in self-attention in simple terms for someone learning transformer inference.
+How does the key-value cache affect the result of self-attention?
+What is the most likely failure mode behind underflow in attention probabilities?
+Why is the value projection matrix needed during autoregressive generation?
+What would break if the value projection matrix were wrong?
+Give a concise explanation of memory coalescing on a GPU in the context of autoregressive text generation.
+Why might an inference engineer choose shared memory instead of global memory?
+Why is the attention score matrix important in a transformer language model?
+How does the language modeling head influence correctness or stability during inference?
+How does the layer normalization layer affect the result of self-attention?
+What mistakes happen when the shape of the feed-forward activation tensor is misunderstood?
+Give a practical explanation of memory bandwidth bottlenecks for debugging model outputs.
+What is the main idea behind debugging NaNs in model outputs in a modern transformer?
+Which details most clearly distinguish validation tests from performance benchmarks?
+Explain why the feed-forward activation tensor matters when bringing up a new transformer inference stack.
+When would you prefer numerical stability over raw throughput in inference code?
+What is a safe first step when investigating a broken attention mask?
+Give an intuitive explanation of the tensor shape for the logits tensor.
+What problem does the normalization epsilon constant solve in transformer inference?
+Explain why validating GPU output against a CPU reference matters when bringing up a new transformer inference stack.
+Give an intuitive explanation of probabilities after softmax for GPU inference work.
+Explain why the attention probability matrix matters when bringing up a new transformer inference stack.
+Summarize feed-forward networks in transformers without using equations.
+How do split-heads layouts and merge-heads layouts affect model behavior differently?
+When would you prefer shared memory over global memory in inference code?
+What problem does logits solve in transformer inference?
+What does each dimension mean in the tensor for the attention score matrix?
+Give an intuitive explanation of residual connections for GPU inference work.
+Why is the shape of the logits tensor important for correctness?
+What problem does prompt tokenization solve in transformer inference?
+How does left padding versus right padding for decoder-only models influence correctness or stability during inference?
+Why is the layer normalization layer needed during autoregressive generation?
+How would you debug problems caused by a bad split-heads layout in transformer inference?
+What is the main idea behind attention masks in a modern transformer?
+How can you detect too many kernel launches early during model bring-up?
+Describe the role of the batch dimension during text generation.
+What should a new engineer remember about occupancy on a CUDA GPU?
+Explain kernel launch overhead in simple terms for someone learning transformer inference.
+What should each axis mean in the shape of the padding mask tensor?
+Explain hidden size in a transformer in simple terms for someone learning transformer inference.
+What would break if the causal attention mask were wrong?
+Explain throughput in simple terms for someone learning transformer inference.
+Why can a mismatch between CPU and GPU outputs break correctness in a transformer implementation?
+How do prompt length and generation length affect model behavior differently?
+Give a short practical explanation of the gate projection in the feed-forward block.
+What problem does numerical stability in transformer inference solve in transformer inference?
+How would you teach tensor cores to a student implementing a transformer from scratch?
+Describe the role of logits during text generation.
+Explain the purpose of the attention score tensor inside a transformer block.
+Why does an inference implementation need tensor shapes in attention?
+What is a safe first step when investigating a bad split-heads layout?
+Describe the role of the key states tensor in self-attention during text generation.
+What problem does splitting hidden states into attention heads solve in transformer inference?
+Give a practical explanation of the autoregressive generation loop for debugging model outputs.
+What is the main idea behind the float16 data type in a modern transformer?
+Describe the job of the attention probability tensor in plain language.
+Explain prompt tokenization in simple terms for someone learning transformer inference.
+Explain prompt length and generation length to someone implementing attention.
+How would you teach the batch dimension to a student implementing a transformer from scratch?
+How do logits and probabilities affect model behavior differently?
+What problem does the attention probability matrix solve in transformer inference?
+Why does an inference implementation need the attention output projection?
+How can the shape of query states in self-attention reveal an implementation bug?
+Give a practical explanation of logits for debugging model outputs.
+What is the main idea behind parameter tying between the embedding matrix and the language modeling head in a modern transformer?
+Why does an inference implementation need greedy decoding?
+Explain the purpose of the context tensor inside a transformer block.
+How does the autoregressive generation loop influence correctness or stability during inference?
+What is the main idea behind attention score scaling in a modern transformer?
+Give a concise explanation of rotary angle frequencies in the context of autoregressive text generation.
+What mistakes happen when the shape of value states in self-attention is misunderstood?
+How do shared memory and global memory affect model behavior differently?
+What problem does kernel fusion solve in transformer inference?
+Explain why the value projection in self-attention matters when bringing up a new transformer inference stack.
+What does the value projection matrix do in self-attention?
+What symptoms usually point to underflow in attention probabilities in a transformer stack?
+What symptoms usually point to incorrect causal masks in a transformer stack?
+What information flows through the down projection in the feed-forward block?
+Explain the purpose of the causal attention mask inside a transformer block.
+Which details most clearly distinguish bfloat16 from float16?
+How does the attention output projection matrix affect the result of self-attention?
+How can you detect mismatched tensor shapes early during model bring-up?
+Give a concise explanation of pinned host memory in the context of autoregressive text generation.
+What information flows through the residual connection?
+What should a new engineer remember about the value states tensor in self-attention?
+Describe the role of pinned host memory during text generation.
+What should a new engineer remember about parameter tying between the embedding matrix and the language modeling head?
+What should a new engineer remember about the intermediate size in the feed-forward block?
+Why is cross-attention important in a transformer language model?
+Give a concise explanation of positional information in transformers in the context of autoregressive text generation.
+Give an intuitive explanation of the head dimension for GPU inference work.
+What problem does the query projection in self-attention solve in transformer inference?
+What should a new engineer remember about the head dimension?
+Why can incorrect tokenization assumptions break correctness in a transformer implementation?
+Why does the transformer block keep the context tensor around?
+Why is memory coalescing on a GPU important in a transformer language model?
+Describe the role of cross-attention during text generation.
+How can the shape of the merged attention output reveal an implementation bug?
+Give an intuitive explanation of token embeddings for GPU inference work.
+Describe the role of attention score scaling during text generation.
+Give a concise explanation of padding masks in batched attention in the context of autoregressive text generation.
+Why does an inference implementation need kernel fusion?
+What is the difference between bfloat16 and float16 in a transformer model?
+Why is nucleus sampling important in a transformer language model?
+Explain the purpose of the language modeling head inside a transformer block.
+Give a concise explanation of the attention context tensor in the context of autoregressive text generation.
+Give a short comparison of split-heads layouts versus merge-heads layouts.
+When would you prefer value projection over attention output projection in inference code?
+How does positional information in transformers influence correctness or stability during inference?
+What is the main idea behind prompt padding in a modern transformer?
+Describe the job of the padding mask in plain language.
+Summarize causal attention masks without using equations.
+What tradeoff separates throughput from latency?
+How would you teach prompt length versus generation length to a student implementing a transformer from scratch?
+What is the difference between tensor cores and standard CUDA cores in a transformer model?
+Why might an inference engineer choose throughput instead of latency?
+What should each axis mean in the shape of query states in self-attention?
+Summarize debugging NaNs in model outputs without using equations.
+Give an intuitive explanation of the value states tensor in self-attention for GPU inference work.
+Why might an inference engineer choose numerical stability instead of raw throughput?
+Describe the practical difference between split-heads layouts and merge-heads layouts.
+How would you teach prompt padding to a student implementing a transformer from scratch?
+Give a concise explanation of attention score scaling in the context of autoregressive text generation.
+Describe the role of probabilities after softmax during text generation.
+How would you teach grouped-query attention to a student implementing a transformer from scratch?
+What is the most likely failure mode behind a bad split-heads layout?
+What problem does the language modeling head solve in transformer inference?
+What mistakes happen when the shape of the attention score matrix is misunderstood?
+Give an intuitive explanation of batching in transformer inference for GPU inference work.
+Why does an inference implementation need the end-of-sequence token?
+Describe the practical difference between validation tests and performance benchmarks.
+How would you teach attention score scaling to a student implementing a transformer from scratch?
+Describe the job of the key-value cache in plain language.
+Describe the role of temperature in text generation during text generation.
+Give an intuitive explanation of profiling CUDA kernels for GPU inference work.
+Summarize float32 accumulation without using equations.
+Why can register pressure break correctness in a transformer implementation?
+How does the normalization epsilon constant influence correctness or stability during inference?
+What should a new engineer remember about asynchronous memory copies?
+Give an intuitive explanation of query-key dot products for GPU inference work.
+Why does an inference implementation need the token embedding matrix?
+Why does the transformer block keep the attention probability tensor around?
+What should a new engineer remember about register pressure?
+How would you teach left padding versus right padding for decoder-only models to a student implementing a transformer from scratch?
+Explain why occupancy on a CUDA GPU matters when bringing up a new transformer inference stack.
+Why might an inference engineer choose token embeddings instead of positional embeddings?
+What problem does tensor shapes in attention solve in transformer inference?
+How does kernel fusion influence correctness or stability during inference?
+How should an engineer read the shape of the token id batch during debugging?
+What should a new engineer remember about memory coalescing on a GPU?
+What information flows through the up projection in the feed-forward block?
+Give a short practical explanation of the query projection matrix.
+What should a new engineer remember about context vectors in attention?
+What is the main idea behind temperature in text generation in a modern transformer?
+How can the shape of key states in self-attention reveal an implementation bug?
+Give a concise explanation of memory bandwidth bottlenecks in the context of autoregressive text generation.
+Describe the role of the token embedding matrix during text generation.
+How would you teach the float16 data type to a student implementing a transformer from scratch?
+Why does an inference implementation need splitting hidden states into attention heads?
+What should a new engineer remember about the normalization epsilon constant?
+Compare causal masking and padding masking in transformer inference.
+How does the value projection matrix affect the result of self-attention?
+What should a new engineer remember about query-key dot products?
+Summarize attention score scaling without using equations.
+What does the down projection in the feed-forward block do in self-attention?
+What is the main idea behind the query projection in self-attention in a modern transformer?
+What is a safe first step when investigating wrong valid sequence lengths?
+Give a practical explanation of grouped-query attention for debugging model outputs.
+How would you teach valid sequence lengths in padded batches to a student implementing a transformer from scratch?
+What would break if the residual connection were wrong?
+Why does an inference implementation need probabilities after softmax?
+Give a short comparison of memory bandwidth bottlenecks versus compute bottlenecks.
+Compare bfloat16 and float16 in transformer inference.
+Summarize memory bandwidth bottlenecks without using equations.
+Describe the practical difference between root mean square normalization and layer normalization.
+How would you narrow down too many kernel launches in an attention kernel?
+What logs or checks help diagnose underflow in attention probabilities?
+Give an intuitive explanation of the bfloat16 data type for GPU inference work.
+Give a concise explanation of the max-subtraction trick in softmax in the context of autoregressive text generation.
+Give a short comparison of root mean square normalization versus layer normalization.
+What problem does prompt truncation solve in transformer inference?
+How would you narrow down numerical overflow in logits in an attention kernel?
+Summarize the query projection in self-attention without using equations.
+When would you prefer logits over probabilities in inference code?
+Summarize parameter tying between the embedding matrix and the language modeling head without using equations.
+What should a new engineer remember about rotary positional embeddings?
+How do memory bandwidth bottlenecks and compute bottlenecks affect model behavior differently?
+Summarize register pressure without using equations.
+Explain why the vocabulary dimension of logits matters when bringing up a new transformer inference stack.
+What is the main idea behind batching in transformer inference in a modern transformer?
+What tradeoff separates left padding from right padding?
+Why is the vocabulary dimension of logits important in a transformer language model?
+What should a new engineer remember about chat templates in instruction-tuned models?
+Describe the role of the context window during text generation.
+Explain value projection and attention output projection to someone implementing attention.
+Give a short comparison of prompt length versus generation length.
+What problem does self-attention solve in transformer inference?
+Why does an inference implementation need shared memory reuse?
+What should a new engineer remember about rotary angle frequencies?
+What is the main idea behind kernel fusion in a modern transformer?
+Why might an inference engineer choose bfloat16 instead of float16?
+What mistakes happen when the shape of key states in self-attention is misunderstood?
+Why is tensor cores important in a transformer language model?
+Explain occupancy on a CUDA GPU in simple terms for someone learning transformer inference.
+Give a short practical explanation of the token embedding matrix.
+What does the up projection in the feed-forward block do in self-attention?
+What is the most likely failure mode behind a bad merge-heads layout?
+What problem does the bfloat16 data type solve in transformer inference?
+What should a new engineer remember about greedy decoding?
+Describe the role of the feed-forward activation tensor during text generation.
+Explain why the value states tensor in self-attention matters when bringing up a new transformer inference stack.
+Why is the shape of the feed-forward activation tensor important for correctness?
+How should an engineer read the shape of the merged attention output during debugging?
+What should a new engineer remember about self-attention?
+How does the language modeling head affect the result of self-attention?
+Give an intuitive explanation of the key projection in self-attention for GPU inference work.
+Summarize the context window without using equations.
+Explain the intermediate size in the feed-forward block in simple terms for someone learning transformer inference.
+Why can uncoalesced memory accesses break correctness in a transformer implementation?
+What logs or checks help diagnose mismatched tensor shapes?
+How would you explain the attention score tensor to a new engineer?
+Give a concise explanation of the sequence length dimension in the context of autoregressive text generation.
+What is the difference between prompt length and generation length in a transformer model?
+Which details most clearly distinguish causal masking from padding masking?
+How does warp divergence influence correctness or stability during inference?
+Why does an inference implementation need the context window?
+What information flows through the context tensor?
+Why is the bfloat16 data type important in a transformer language model?
+Give a short practical explanation of the language modeling head.
+Summarize the key projection in self-attention without using equations.
+How would you teach throughput to a student implementing a transformer from scratch?
+Explain top-k sampling in simple terms for someone learning transformer inference.
+How would you narrow down invalid padding lengths in an attention kernel?
+Why is causal attention masks important in a transformer language model?
+How does autoregressive next-token prediction influence correctness or stability during inference?
+Give an intuitive explanation of the tensor shape for key states in self-attention.
+How would you explain the key projection matrix to a new engineer?
+Give an intuitive explanation of the key-value cache for GPU inference work.
+Why is the shape of the merged attention output important for correctness?
+How does shared memory reuse influence correctness or stability during inference?
+What problem does attention head grouping solve in transformer inference?
+Compare query projection and key projection in transformer inference.
+How does softmax normalization influence correctness or stability during inference?
+Give an intuitive explanation of the difference between model correctness and model speed for GPU inference work.
+What would break if the feed-forward network were wrong?
+How does the attention score tensor affect the result of self-attention?
+Describe the role of layer normalization during text generation.
+How can you detect NaNs after softmax early during model bring-up?
+How would you debug problems caused by numerical overflow in logits in transformer inference?
+Explain profiling CUDA kernels in simple terms for someone learning transformer inference.
+Why is self-attention important in a transformer language model?
+When would you prefer causal masking over padding masking in inference code?
+What is a safe first step when investigating wrong rotary positional embedding math?
+Summarize logits without using equations.
+Which details most clearly distinguish an end-of-sequence token from a padding token?
+Summarize sharing key-value heads across query heads without using equations.
+What problem does register pressure solve in transformer inference?
+What logs or checks help diagnose invalid padding lengths?
+How would you narrow down NaNs after softmax in an attention kernel?
+What logs or checks help diagnose register pressure?
+Summarize the key states tensor in self-attention without using equations.
+Explain the tensor shape of the context tensor in a transformer.
+Why does an inference implementation need query-key dot products?
+Describe the job of the language modeling head in plain language.
+What does the context tensor do in self-attention?
+What is the main idea behind the feed-forward activation tensor in a modern transformer?
+Explain temperature in text generation in simple terms for someone learning transformer inference.
+When would you prefer query projection over key projection in inference code?
+Give an intuitive explanation of softmax normalization for GPU inference work.
+Why does an inference implementation need the key states tensor in self-attention?
+Give a concise explanation of asynchronous memory copies in the context of autoregressive text generation.
+Explain grouped-query attention in simple terms for someone learning transformer inference.
+What is the main idea behind greedy decoding in a modern transformer?
+Summarize the head dimension without using equations.
+Give an intuitive explanation of the end-of-sequence token for GPU inference work.
+Give a concise explanation of the head dimension in the context of autoregressive text generation.
+How does the bfloat16 data type influence correctness or stability during inference?
+How do you separate mismatched tensor shapes from a performance-only issue?
+How does the residual connection affect the result of self-attention?
+Which details most clearly distinguish memory bandwidth bottlenecks from compute bottlenecks?
+What problem does layer normalization solve in transformer inference?
+How would you explain the padding mask to a new engineer?
+What should a new engineer remember about the feed-forward activation tensor?
+Why does an inference implementation need the difference between model correctness and model speed?
+Why does an inference implementation need rotary angle frequencies?
+Describe the role of the key-value cache during text generation.
+Why does an inference implementation need debugging NaNs in model outputs?
+Explain the tensor shape of the key-value cache layout in a transformer.
+Explain why rotary angle frequencies matters when bringing up a new transformer inference stack.
+What tradeoff separates memory bandwidth bottlenecks from compute bottlenecks?
+Give a concise explanation of register pressure in the context of autoregressive text generation.
+What is the main idea behind batch-major tensor layout in a modern transformer?
+Summarize the attention output projection without using equations.
+How does register pressure influence correctness or stability during inference?
+Why is pinned host memory important in a transformer language model?
+Give a practical explanation of batch-major tensor layout for debugging model outputs.
+Describe the role of the language modeling head during text generation.
+How would you teach numerical stability in transformer inference to a student implementing a transformer from scratch?
+What does the language modeling head do in self-attention?
+Explain tensor cores in simple terms for someone learning transformer inference.
+Why can a bad split-heads layout break correctness in a transformer implementation?
+What problem does memory coalescing on a GPU solve in transformer inference?
+How would you debug problems caused by NaNs in a CUDA attention kernel in transformer inference?
+Explain why the head dimension matters when bringing up a new transformer inference stack.
+Why does the transformer block keep the up projection in the feed-forward block around?
+How do bfloat16 and float16 affect model behavior differently?
+How does self-attention influence correctness or stability during inference?
+Explain the language modeling head in simple terms for someone learning transformer inference.
+Why does an inference implementation need attention masks?
+How would you teach kernel fusion to a student implementing a transformer from scratch?
+Why is latency important in a transformer language model?
+Give a concise explanation of prompt padding in the context of autoregressive text generation.
+Explain why autoregressive next-token prediction matters when bringing up a new transformer inference stack.
+Give a practical explanation of query-key dot products for debugging model outputs.
+Explain the end-of-sequence token in simple terms for someone learning transformer inference.
+What tradeoff separates query projection from key projection?
+Give a practical explanation of splitting hidden states into attention heads for debugging model outputs.
+Give a concise explanation of profiling CUDA kernels in the context of autoregressive text generation.
+How would you explain the down projection in the feed-forward block to a new engineer?
+Explain why padding masks in batched attention matters when bringing up a new transformer inference stack.
+Give a concise explanation of the feed-forward activation tensor in the context of autoregressive text generation.
+Explain the tensor shape of key states in self-attention in a transformer.
+Why can wrong valid sequence lengths break correctness in a transformer implementation?
+What is the most likely failure mode behind NaNs in a CUDA attention kernel?
+What should a new engineer remember about prompt length versus generation length?
+Give a concise explanation of cross-attention in the context of autoregressive text generation.
+Why is occupancy on a CUDA GPU important in a transformer language model?
+Summarize the intermediate size in the feed-forward block without using equations.
+What should a new engineer remember about grouped-query attention?
+Why is that shape used for the attention probability matrix?
+What is the difference between root mean square normalization and layer normalization in a transformer model?
+Explain chat templates in instruction-tuned models in simple terms for someone learning transformer inference.
+Why is the root mean square normalization layer needed during autoregressive generation?
+How can the shape of the logits tensor reveal an implementation bug?
+Give an intuitive explanation of the attention output projection for GPU inference work.
+Give an intuitive explanation of the tensor shape for the feed-forward activation tensor.
+How does attention head grouping influence correctness or stability during inference?
+Give a practical explanation of feed-forward networks in transformers for debugging model outputs.
+Which details most clearly distinguish greedy decoding from sampling?
+Give an intuitive explanation of latency for GPU inference work.
+Give a concise explanation of the query projection in self-attention in the context of autoregressive text generation.
+When would you prefer memory bandwidth bottlenecks over compute bottlenecks in inference code?
+What problem does prompt length versus generation length solve in transformer inference?
+What does each dimension mean in the tensor for the feed-forward activation tensor?
+What should a new engineer remember about the value projection in self-attention?
+Give an intuitive explanation of padding masks in batched attention for GPU inference work.
+Summarize the feed-forward activation tensor without using equations.
+Give a short practical explanation of the padding mask.
+Explain why warp divergence matters when bringing up a new transformer inference stack.
+Summarize latency without using equations.
+Why might an inference engineer choose validation tests instead of performance benchmarks?
+What mistakes happen when the shape of the padding mask tensor is misunderstood?
+What should a new engineer remember about the query projection in self-attention?
+Why is positional information in transformers important in a transformer language model?
+Explain why debugging NaNs in model outputs matters when bringing up a new transformer inference stack.
+How would you teach validating GPU output against a CPU reference to a student implementing a transformer from scratch?
+Describe the role of the max-subtraction trick in softmax during text generation.
+What tradeoff separates logits from probabilities?
+Give an intuitive explanation of the batch dimension for GPU inference work.
+Give a practical explanation of token embeddings for debugging model outputs.
+What is the main idea behind autoregressive next-token prediction in a modern transformer?
+Give a short comparison of numerical stability versus raw throughput.
+What is the main idea behind float32 accumulation in a modern transformer?
+Summarize splitting hidden states into attention heads without using equations.
+What problem does the context window solve in transformer inference?
+What problem does causal masking solve in transformer inference?
+Give a concise explanation of the batch dimension in the context of autoregressive text generation.
+Why is the padding mask needed during autoregressive generation?
+What should a new engineer remember about attention masks?
+Describe the role of the attention probability matrix during text generation.
+What symptoms usually point to incorrect bfloat16 casts in a transformer stack?
+Describe the role of tensor shapes in attention during text generation.
+Why does an inference implementation need hidden size in a transformer?
+How do you separate incorrect tokenization assumptions from a performance-only issue?
+What problem does feed-forward networks in transformers solve in transformer inference?
+What is the main idea behind self-attention in a modern transformer?
+Give a practical explanation of the feed-forward activation tensor for debugging model outputs.
+What is a safe first step when investigating a broken key-value cache?
+Describe the practical difference between batching and single-request inference.
+How does the head dimension influence correctness or stability during inference?
+When would you prefer root mean square normalization over layer normalization in inference code?
+Give a concise explanation of the difference between model correctness and model speed in the context of autoregressive text generation.
+What tradeoff separates split-heads layouts from merge-heads layouts?
+How do left padding and right padding affect model behavior differently?
+Summarize the bfloat16 data type without using equations.
+Give an intuitive explanation of left padding versus right padding for decoder-only models for GPU inference work.
+What is the main idea behind prompt tokenization in a modern transformer?
+Why is layer normalization important in a transformer language model?
+Which details most clearly distinguish shared memory from global memory?
+What problem does tensor cores solve in transformer inference?
+Give an intuitive explanation of logits for GPU inference work.
+Why does an inference implementation need nucleus sampling?
+How would you narrow down wrong valid sequence lengths in an attention kernel?
+How does the key projection matrix affect the result of self-attention?
+Why is the shape of the key-value cache layout important for correctness?
+What is the main idea behind context vectors in attention in a modern transformer?
+How would you explain the token embedding matrix to a new engineer?
+How does the attention score matrix influence correctness or stability during inference?
+Give an intuitive explanation of register pressure for GPU inference work.
+What tradeoff separates value projection from attention output projection?
+Describe the job of the residual connection in plain language.
+What should a new engineer remember about logits?
+Why is the query states tensor in self-attention important in a transformer language model?
+Explain probabilities after softmax in simple terms for someone learning transformer inference.
+How does numerical stability in transformer inference influence correctness or stability during inference?
+How does the max-subtraction trick in softmax influence correctness or stability during inference?
+Why does an inference implementation need attention score scaling?
+When would you prefer token embeddings over positional embeddings in inference code?
+Explain why latency matters when bringing up a new transformer inference stack.
+Why is the key-value cache needed during autoregressive generation?
+How does nucleus sampling influence correctness or stability during inference?
+Give an intuitive explanation of temperature in text generation for GPU inference work.
+Explain the purpose of the down projection in the feed-forward block inside a transformer block.
+Give a concise explanation of nucleus sampling in the context of autoregressive text generation.
+Why is the language modeling head needed during autoregressive generation?
+When would you prefer throughput over latency in inference code?
+What should a new engineer remember about the attention probability matrix?
+What symptoms usually point to uncoalesced memory accesses in a transformer stack?
+Why can too many kernel launches break correctness in a transformer implementation?
+What is the most likely failure mode behind register pressure?
+What is the most likely failure mode behind a broken key-value cache?
+What is the main idea behind occupancy on a CUDA GPU in a modern transformer?
+Describe the job of the root mean square normalization layer in plain language.
+How does the key projection in self-attention influence correctness or stability during inference?
+What is the main idea behind the max-subtraction trick in softmax in a modern transformer?
+What problem does the value projection in self-attention solve in transformer inference?
+Give a short practical explanation of the SwiGLU activation pattern.
+Why is the down projection in the feed-forward block needed during autoregressive generation?
+Give a practical explanation of prompt tokenization for debugging model outputs.
+Why can incorrect causal masks break correctness in a transformer implementation?
+Give an intuitive explanation of the tensor shape for the attention probability matrix.
+Why does an inference implementation need feed-forward networks in transformers?
+What is the main idea behind register pressure in a modern transformer?
+Why might an inference engineer choose an end-of-sequence token instead of a padding token?
+How would you debug problems caused by incorrect tokenization assumptions in transformer inference?
+Summarize residual connections without using equations.
+Describe the role of root mean square normalization during text generation.
+Explain tensor cores and standard CUDA cores to someone implementing attention.
+Why does an inference implementation need logits?
+Why is residual connections important in a transformer language model?
+Explain logits and probabilities to someone implementing attention.
+Why does the transformer block keep the causal attention mask around?
+Why might an inference engineer choose split-heads layouts instead of merge-heads layouts?
+Describe the role of autoregressive next-token prediction during text generation.
+Explain why the attention context tensor matters when bringing up a new transformer inference stack.
+How would you teach pinned host memory to a student implementing a transformer from scratch?
+Explain query-key dot products in simple terms for someone learning transformer inference.
+Why does an inference implementation need tensor cores?
+How do numerical stability and raw throughput affect model behavior differently?
+Give a concise explanation of residual connections in the context of autoregressive text generation.
+How would you teach layer normalization to a student implementing a transformer from scratch?
+Summarize memory coalescing on a GPU without using equations.
+When would you prefer left padding over right padding in inference code?
+What is the difference between query projection and key projection in a transformer model?
+What is a safe first step when investigating a bad merge-heads layout?
+Why can a broken attention mask break correctness in a transformer implementation?
+What should a new engineer remember about the attention context tensor?
+What would break if the layer normalization layer were wrong?
+What should a new engineer remember about latency?
+How would you teach nucleus sampling to a student implementing a transformer from scratch?
+Summarize layer normalization without using equations.
+Why does an inference implementation need causal attention masks?
+What is the main idea behind prompt truncation in a modern transformer?
+What information flows through the gate projection in the feed-forward block?
+How do you separate wrong valid sequence lengths from a performance-only issue?
+How would you explain the layer normalization layer to a new engineer?
+How does latency influence correctness or stability during inference?
+Why might an inference engineer choose batching instead of single-request inference?
+Explain the query projection in self-attention in simple terms for someone learning transformer inference.
+How does the float16 data type influence correctness or stability during inference?
+Give a concise explanation of the query states tensor in self-attention in the context of autoregressive text generation.
+What would break if the root mean square normalization layer were wrong?
+What mistakes happen when the shape of query states in self-attention is misunderstood?
+Why is the batch dimension important in a transformer language model?
+Describe the job of the layer normalization layer in plain language.
+What is the difference between token embeddings and positional embeddings in a transformer model?
+Describe the role of greedy decoding during text generation.
+How do you separate incorrect causal masks from a performance-only issue?
+What is the main idea behind merging attention heads in a modern transformer?
+Why is the value projection in self-attention important in a transformer language model?
+Why is batch-major tensor layout important in a transformer language model?
+When would you prefer validation tests over performance benchmarks in inference code?
+Explain memory bandwidth bottlenecks in simple terms for someone learning transformer inference.
+Describe the role of prompt truncation during text generation.
+Summarize kernel fusion without using equations.
+Describe the practical difference between numerical stability and raw throughput.
+How would you debug problems caused by register pressure in transformer inference?
+Why is the shape of the padding mask tensor important for correctness?
+What is the main idea behind memory coalescing on a GPU in a modern transformer?
+What information flows through the feed-forward network?
+What would break if the attention score tensor were wrong?
+Why is sharing key-value heads across query heads important in a transformer language model?
+What is the main idea behind causal attention masks in a modern transformer?
+Explain the value projection in self-attention in simple terms for someone learning transformer inference.
+What information flows through the query projection matrix?
+How would you teach self-attention to a student implementing a transformer from scratch?
+Describe the role of self-attention during text generation.
+What information flows through the root mean square normalization layer?
+Why does an inference implementation need register pressure?
+How would you teach the attention context tensor to a student implementing a transformer from scratch?
+Why is the shape of the token id batch important for correctness?
+Give an intuitive explanation of the query projection in self-attention for GPU inference work.
+Give a concise explanation of prompt tokenization in the context of autoregressive text generation.
+How would you teach batch-major tensor layout to a student implementing a transformer from scratch?
+Explain the autoregressive generation loop in simple terms for someone learning transformer inference.
+How can you detect a bad merge-heads layout early during model bring-up?
+Give an intuitive explanation of kernel fusion for GPU inference work.
+What is the main idea behind left padding versus right padding for decoder-only models in a modern transformer?
+Why does an inference implementation need parameter tying between the embedding matrix and the language modeling head?
+Give a concise explanation of splitting hidden states into attention heads in the context of autoregressive text generation.
+Why does an inference implementation need layer normalization?
+Why is attention head grouping important in a transformer language model?
+How does padding masks in batched attention influence correctness or stability during inference?
+How would you teach tensor shapes in attention to a student implementing a transformer from scratch?
+Describe the job of the feed-forward network in plain language.
+Which details most clearly distinguish token embeddings from positional embeddings?
+Why is the shape of the attention probability matrix important for correctness?
+Describe the role of the query projection in self-attention during text generation.
+How would you teach rotary angle frequencies to a student implementing a transformer from scratch?
+How does feed-forward networks in transformers influence correctness or stability during inference?
+What is the main idea behind tensor shapes in attention in a modern transformer?
+Why is the SwiGLU activation pattern needed during autoregressive generation?
+What information flows through the layer normalization layer?
+How do you separate too many kernel launches from a performance-only issue?
+Why is debugging NaNs in model outputs important in a transformer language model?
+How would you teach the intermediate size in the feed-forward block to a student implementing a transformer from scratch?
+Explain why greedy decoding matters when bringing up a new transformer inference stack.
+What does each dimension mean in the tensor for the attention probability matrix?
+Why is merging attention heads important in a transformer language model?
+What should a new engineer remember about throughput?
+What should a new engineer remember about left padding versus right padding for decoder-only models?
+Explain numerical stability in transformer inference in simple terms for someone learning transformer inference.
+Why is the residual connection needed during autoregressive generation?
+How would you teach attention masks to a student implementing a transformer from scratch?
+How would you explain the query projection matrix to a new engineer?
+Explain the purpose of the feed-forward network inside a transformer block.
+How would you debug problems caused by a broken key-value cache in transformer inference?
+Explain nucleus sampling in simple terms for someone learning transformer inference.
+Why is probabilities after softmax important in a transformer language model?
+Summarize the max-subtraction trick in softmax without using equations.
+What problem does memory bandwidth bottlenecks solve in transformer inference?
+What logs or checks help diagnose warp divergence?
+Explain rotary angle frequencies in simple terms for someone learning transformer inference.
+How does the attention probability matrix influence correctness or stability during inference?
+Compare a key-value cache and full recomputation in transformer inference.
+Why is rotary positional embeddings important in a transformer language model?
+Summarize the autoregressive generation loop without using equations.
+Give a short practical explanation of the root mean square normalization layer.
+How would you teach the max-subtraction trick in softmax to a student implementing a transformer from scratch?
+Give an intuitive explanation of the attention context tensor for GPU inference work.
+How does the causal attention mask affect the result of self-attention?
+How would you teach the head dimension to a student implementing a transformer from scratch?
+Describe the practical difference between greedy decoding and sampling.
+Give an intuitive explanation of context vectors in attention for GPU inference work.
+Give an intuitive explanation of the token embedding matrix for GPU inference work.
+How would you teach probabilities after softmax to a student implementing a transformer from scratch?
+How do a key-value cache and full recomputation affect model behavior differently?
+Explain the key-value cache in simple terms for someone learning transformer inference.
+How does the key states tensor in self-attention influence correctness or stability during inference?
+Why is greedy decoding important in a transformer language model?
+What tradeoff separates batching from single-request inference?
+What mistakes happen when the shape of the merged attention output is misunderstood?
+Describe the role of attention head grouping during text generation.
+What would break if the padding mask were wrong?
+What information flows through the value projection matrix?
+Explain batching and single-request inference to someone implementing attention.
+Summarize batch-major tensor layout without using equations.
+Explain the tensor shape of the merged attention output in a transformer.
+Explain why splitting hidden states into attention heads matters when bringing up a new transformer inference stack.
+What problem does the key states tensor in self-attention solve in transformer inference?
+How would you teach token embeddings to a student implementing a transformer from scratch?
+What should a new engineer remember about the key states tensor in self-attention?
+What is the most likely failure mode behind warp divergence?
+What tradeoff separates numerical stability from raw throughput?
+How does attention score scaling influence correctness or stability during inference?
+What is the most likely failure mode behind a mismatch between CPU and GPU outputs?
+Why might an inference engineer choose tensor cores instead of standard CUDA cores?
+Give a concise explanation of rotary positional embeddings in the context of autoregressive text generation.
+What does the key projection matrix do in self-attention?
+How would you narrow down mismatched tensor shapes in an attention kernel?
+Explain batch-major tensor layout in simple terms for someone learning transformer inference.
+Which details most clearly distinguish logits from probabilities?
+What symptoms usually point to register pressure in a transformer stack?
+Summarize the vocabulary dimension of logits without using equations.
+Why does an inference implementation need the intermediate size in the feed-forward block?
+Give a practical explanation of root mean square normalization for debugging model outputs.
+Give an intuitive explanation of the language modeling head for GPU inference work.
+Summarize throughput without using equations.
+How would you teach temperature in text generation to a student implementing a transformer from scratch?
+What logs or checks help diagnose a broken key-value cache?
+Describe the role of numerical stability in transformer inference during text generation.
+What is the difference between memory bandwidth bottlenecks and compute bottlenecks in a transformer model?
+Explain layer normalization in simple terms for someone learning transformer inference.
+Give a short practical explanation of the up projection in the feed-forward block.
+What information flows through the attention probability tensor?
+Summarize the key-value cache without using equations.
+What should each axis mean in the shape of the context tensor?
+How do an end-of-sequence token and a padding token affect model behavior differently?
+What should a new engineer remember about sharing key-value heads across query heads?
+What should a new engineer remember about the vocabulary dimension of logits?
+Compare left padding and right padding in transformer inference.
+Summarize context vectors in attention without using equations.
+What is the main idea behind padding masks in batched attention in a modern transformer?
+Explain the tensor shape of the logits tensor in a transformer.
+Why does an inference implementation need kernel launch overhead?
+What symptoms usually point to invalid padding lengths in a transformer stack?
+What is the main idea behind the query states tensor in self-attention in a modern transformer?
+How does grouped-query attention influence correctness or stability during inference?
+What problem does the key-value cache solve in transformer inference?
+Explain the tensor shape of the attention score matrix in a transformer.
+What tradeoff separates a key-value cache from full recomputation?
+Explain the value states tensor in self-attention in simple terms for someone learning transformer inference.
+Give an intuitive explanation of the tensor shape for value states in self-attention.
+Summarize root mean square normalization without using equations.
+Explain the token embedding matrix in simple terms for someone learning transformer inference.
+How can you detect a broken attention mask early during model bring-up?
+What problem does occupancy on a CUDA GPU solve in transformer inference?
+How can the shape of the key-value cache layout reveal an implementation bug?
+Why is the max-subtraction trick in softmax important in a transformer language model?
+What is the main idea behind throughput in a modern transformer?
+Explain why cross-attention matters when bringing up a new transformer inference stack.
+Why is splitting hidden states into attention heads important in a transformer language model?
+Why does an inference implementation need float32 accumulation?
+Give an intuitive explanation of autoregressive next-token prediction for GPU inference work.
+What symptoms usually point to wrong valid sequence lengths in a transformer stack?
+Give a short comparison of causal masking versus padding masking.
+Give a short comparison of shared memory versus global memory.
+Explain the normalization epsilon constant in simple terms for someone learning transformer inference.
+Give a short practical explanation of the causal attention mask.
+Why is query-key dot products important in a transformer language model?
+Give a practical explanation of the key projection in self-attention for debugging model outputs.
+Explain the purpose of the query projection matrix inside a transformer block.
+What should a new engineer remember about tensor cores?
+Give a concise explanation of feed-forward networks in transformers in the context of autoregressive text generation.
+Why might an inference engineer choose greedy decoding instead of sampling?
+What problem does nucleus sampling solve in transformer inference?
+What should a new engineer remember about layer normalization?
+How does chat templates in instruction-tuned models influence correctness or stability during inference?
+Compare value projection and attention output projection in transformer inference.
+Give an intuitive explanation of the max-subtraction trick in softmax for GPU inference work.
+How does batching in transformer inference influence correctness or stability during inference?
+How should an engineer read the shape of the padding mask tensor during debugging?
+Describe the role of positional information in transformers during text generation.
+Describe the role of rotary positional embeddings during text generation.
+How does occupancy on a CUDA GPU influence correctness or stability during inference?
+Explain the purpose of the SwiGLU activation pattern inside a transformer block.
+Summarize token embeddings without using equations.
+Give a concise explanation of causal masking in the context of autoregressive text generation.
+Give a concise explanation of the attention probability matrix in the context of autoregressive text generation.
+Explain why attention masks matters when bringing up a new transformer inference stack.
+How does prompt padding influence correctness or stability during inference?
+What logs or checks help diagnose NaNs after softmax?
+Explain merging attention heads in simple terms for someone learning transformer inference.
+What is the most likely failure mode behind incorrect tokenization assumptions?
+What problem does rotary angle frequencies solve in transformer inference?
+What is the main idea behind the attention output projection in a modern transformer?
+How does profiling CUDA kernels influence correctness or stability during inference?
+How does causal masking influence correctness or stability during inference?
+What would break if the key-value cache were wrong?
+How can the shape of the token id batch reveal an implementation bug?
+Describe the role of grouped-query attention during text generation.
+Give a concise explanation of sharing key-value heads across query heads in the context of autoregressive text generation.
+How does sharing key-value heads across query heads influence correctness or stability during inference?
+Give an intuitive explanation of prompt truncation for GPU inference work.
+How would you narrow down incorrect causal masks in an attention kernel?
+Summarize query-key dot products without using equations.
+What would break if the up projection in the feed-forward block were wrong?
+Why does the transformer block keep the feed-forward network around?
+What is the main idea behind residual connections in a modern transformer?
+Give a concise explanation of logits in the context of autoregressive text generation.
+Why is hidden size in a transformer important in a transformer language model?
+What tradeoff separates shared memory from global memory?
+What does the attention probability tensor do in self-attention?
+Summarize greedy decoding without using equations.
+What information flows through the key-value cache?
+What problem does softmax normalization solve in transformer inference?
+How does the difference between model correctness and model speed influence correctness or stability during inference?
+How do you separate incorrect bfloat16 casts from a performance-only issue?
+What does the padding mask do in self-attention?
+What problem does autoregressive next-token prediction solve in transformer inference?
+What problem does probabilities after softmax solve in transformer inference?
+Give an intuitive explanation of the autoregressive generation loop for GPU inference work.
+How would you teach occupancy on a CUDA GPU to a student implementing a transformer from scratch?
+How do you separate NaNs after softmax from a performance-only issue?
+Why is that shape used for key states in self-attention?
+Describe the role of residual connections during text generation.
+Why does an inference implementation need prompt padding?
+What is the most likely failure mode behind numerical overflow in logits?
+Why is autoregressive next-token prediction important in a transformer language model?
+What symptoms usually point to NaNs after softmax in a transformer stack?
+Why is prompt length versus generation length important in a transformer language model?
+Why does an inference implementation need latency?
+What should a new engineer remember about the query states tensor in self-attention?
+How would you teach the autoregressive generation loop to a student implementing a transformer from scratch?
+What should a new engineer remember about token embeddings?
+Give a concise explanation of causal attention masks in the context of autoregressive text generation.
+How do you separate a broken attention mask from a performance-only issue?
+How do you separate underflow in attention probabilities from a performance-only issue?
+How do throughput and latency affect model behavior differently?
+Why does an inference implementation need grouped-query attention?
+Explain the purpose of the residual connection inside a transformer block.
+What symptoms usually point to NaNs in a CUDA attention kernel in a transformer stack?
+What symptoms usually point to incorrect tokenization assumptions in a transformer stack?
+How does greedy decoding influence correctness or stability during inference?
+Give a concise explanation of latency in the context of autoregressive text generation.
+How can you detect wrong valid sequence lengths early during model bring-up?
+How would you debug problems caused by warp divergence in transformer inference?
+What does the residual connection do in self-attention?
+Give an intuitive explanation of batch-major tensor layout for GPU inference work.
+Describe the job of the up projection in the feed-forward block in plain language.
+What would break if the query projection matrix were wrong?
+Summarize rotary positional embeddings without using equations.
+What does the gate projection in the feed-forward block do in self-attention?
+Why does an inference implementation need the query states tensor in self-attention?
+What is the main idea behind grouped-query attention in a modern transformer?
+What is the most likely failure mode behind incorrect causal masks?
+Give an intuitive explanation of self-attention for GPU inference work.
+What should a new engineer remember about autoregressive next-token prediction?
+How does token embeddings influence correctness or stability during inference?
+What should a new engineer remember about kernel launch overhead?
+How do you separate NaNs in a CUDA attention kernel from a performance-only issue?
+What does each dimension mean in the tensor for the context tensor?
+What is a safe first step when investigating uncoalesced memory accesses?
+How does parameter tying between the embedding matrix and the language modeling head influence correctness or stability during inference?
+What logs or checks help diagnose NaNs in a CUDA attention kernel?
+What is a safe first step when investigating incorrect bfloat16 casts?
+What should a new engineer remember about batch-major tensor layout?
+What problem does the query states tensor in self-attention solve in transformer inference?
+Describe the role of the value projection in self-attention during text generation.
+Why is that shape used for the merged attention output?
+Compare prompt length and generation length in transformer inference.
+What should a new engineer remember about hidden size in a transformer?
+What is the difference between numerical stability and raw throughput in a transformer model?
+What is the main idea behind rotary positional embeddings in a modern transformer?
+Give a short practical explanation of the residual connection.
+How does the token embedding matrix influence correctness or stability during inference?
+Why is profiling CUDA kernels important in a transformer language model?
+How does the sequence length dimension influence correctness or stability during inference?
+Compare root mean square normalization and layer normalization in transformer inference.
+What is the most likely failure mode behind NaNs after softmax?
+Why is the sequence length dimension important in a transformer language model?
+How would you teach kernel launch overhead to a student implementing a transformer from scratch?
+What is the difference between greedy decoding and sampling in a transformer model?
+What problem does temperature in text generation solve in transformer inference?
+Describe the role of latency during text generation.
+How does hidden size in a transformer influence correctness or stability during inference?
+How does top-k sampling influence correctness or stability during inference?
+Why is warp divergence important in a transformer language model?
+Explain the bfloat16 data type in simple terms for someone learning transformer inference.
+How would you explain the feed-forward network to a new engineer?
+Why can a bad merge-heads layout break correctness in a transformer implementation?
+Give a practical explanation of chat templates in instruction-tuned models for debugging model outputs.
+What should a new engineer remember about residual connections?
+Describe the role of the attention score matrix during text generation.
+Why is the attention output projection matrix needed during autoregressive generation?
+Summarize self-attention without using equations.
+How does prompt truncation influence correctness or stability during inference?
+What is the main idea behind shared memory reuse in a modern transformer?
+Why does an inference implementation need padding masks in batched attention?
+Why is the shape of query states in self-attention important for correctness?
+How would you debug problems caused by uncoalesced memory accesses in transformer inference?
+What problem does cross-attention solve in transformer inference?
+Explain the difference between model correctness and model speed in simple terms for someone learning transformer inference.
+What should a new engineer remember about the key-value cache?
+Why is the attention probability tensor needed during autoregressive generation?
+How would you narrow down NaNs in a CUDA attention kernel in an attention kernel?
+What is the main idea behind the batch dimension in a modern transformer?
+Explain validating GPU output against a CPU reference in simple terms for someone learning transformer inference.
+Describe the role of nucleus sampling during text generation.
+Explain prompt padding in simple terms for someone learning transformer inference.
+Why does an inference implementation need validating GPU output against a CPU reference?
+Give a concise explanation of attention masks in the context of autoregressive text generation.
+Give a concise explanation of the attention score matrix in the context of autoregressive text generation.
+Why is rotary angle frequencies important in a transformer language model?
+Give an intuitive explanation of occupancy on a CUDA GPU for GPU inference work.
+How does the context window influence correctness or stability during inference?
+What is the main idea behind the token embedding matrix in a modern transformer?
+What should a new engineer remember about shared memory reuse?
+What is the main idea behind the context window in a modern transformer?
+Summarize the difference between model correctness and model speed without using equations.
+Give a concise explanation of the token embedding matrix in the context of autoregressive text generation.
+How does rotary angle frequencies influence correctness or stability during inference?
+How does memory coalescing on a GPU influence correctness or stability during inference?
+What logs or checks help diagnose numerical overflow in logits?
+Give an intuitive explanation of the tensor shape for the merged attention output.
+How would you teach float32 accumulation to a student implementing a transformer from scratch?
+Give an intuitive explanation of positional information in transformers for GPU inference work.
+Describe the role of the value states tensor in self-attention during text generation.
+How can the shape of the context tensor reveal an implementation bug?
+How would you teach shared memory reuse to a student implementing a transformer from scratch?
+Why is feed-forward networks in transformers important in a transformer language model?
+Summarize rotary angle frequencies without using equations.
+Give a short practical explanation of the down projection in the feed-forward block.
+What is the main idea behind query-key dot products in a modern transformer?
+Explain positional information in transformers in simple terms for someone learning transformer inference.
+Explain the tensor shape of value states in self-attention in a transformer.
+Why is that shape used for the padding mask tensor?
+Give an intuitive explanation of asynchronous memory copies for GPU inference work.
+Explain the purpose of the root mean square normalization layer inside a transformer block.
+Summarize prompt length versus generation length without using equations.
+Describe the role of batch-major tensor layout during text generation.
+What is the main idea behind the key-value cache in a modern transformer?
+How does the end-of-sequence token influence correctness or stability during inference?
+What is the difference between an end-of-sequence token and a padding token in a transformer model?
+What is the most likely failure mode behind uncoalesced memory accesses?
+Give a practical explanation of the intermediate size in the feed-forward block for debugging model outputs.
+How would you teach the key states tensor in self-attention to a student implementing a transformer from scratch?
+Why is the key projection matrix needed during autoregressive generation?
+What symptoms usually point to a broken key-value cache in a transformer stack?
+Give an intuitive explanation of the vocabulary dimension of logits for GPU inference work.
+Give a practical explanation of the attention score matrix for debugging model outputs.
+Give an intuitive explanation of memory coalescing on a GPU for GPU inference work.
+What is a safe first step when investigating incorrect causal masks?
+Describe the role of causal attention masks during text generation.
+How does query-key dot products influence correctness or stability during inference?
+Explain the head dimension in simple terms for someone learning transformer inference.
+Explain autoregressive next-token prediction in simple terms for someone learning transformer inference.
+What should a new engineer remember about the token embedding matrix?
+How does temperature in text generation influence correctness or stability during inference?
+Give an intuitive explanation of valid sequence lengths in padded batches for GPU inference work.
+Describe the role of attention masks during text generation.
+What would break if the attention output projection matrix were wrong?
+What does the layer normalization layer do in self-attention?
+How would you describe the dimensions of the logits tensor to a beginner?
+What should a new engineer remember about the batch dimension?
+How does the padding mask affect the result of self-attention?
+Explain valid sequence lengths in padded batches in simple terms for someone learning transformer inference.
+Describe the role of query-key dot products during text generation.
+What problem does the autoregressive generation loop solve in transformer inference?
+Summarize the value projection in self-attention without using equations.
+Give an intuitive explanation of hidden size in a transformer for GPU inference work.
+How would you narrow down a mismatch between CPU and GPU outputs in an attention kernel?
+Describe the role of padding masks in batched attention during text generation.
+Why is root mean square normalization important in a transformer language model?
+Describe the practical difference between prompt length and generation length.
+Why is kernel fusion important in a transformer language model?
+What is the main idea behind the intermediate size in the feed-forward block in a modern transformer?
+How would you teach the vocabulary dimension of logits to a student implementing a transformer from scratch?
+What is the main idea behind the attention context tensor in a modern transformer?
+Describe the role of context vectors in attention during text generation.
+Why does the transformer block keep the query projection matrix around?
+What is the main idea behind numerical stability in transformer inference in a modern transformer?
+What should a new engineer remember about causal masking?
+Summarize occupancy on a CUDA GPU without using equations.
+Why is the key-value cache important in a transformer language model?
+Which details most clearly distinguish value projection from attention output projection?
+Why is prompt padding important in a transformer language model?
+How does probabilities after softmax influence correctness or stability during inference?
+What should a new engineer remember about the autoregressive generation loop?
+What symptoms usually point to mismatched tensor shapes in a transformer stack?
+How does the token embedding matrix affect the result of self-attention?
+What problem does query-key dot products solve in transformer inference?
+What is the main idea behind logits in a modern transformer?
+What should a new engineer remember about positional information in transformers?
+Why can mismatched tensor shapes break correctness in a transformer implementation?
+Why is left padding versus right padding for decoder-only models important in a transformer language model?
+Summarize autoregressive next-token prediction without using equations.
+Explain the tensor shape of the feed-forward activation tensor in a transformer.
+What tradeoff separates prompt length from generation length?
+What is the difference between throughput and latency in a transformer model?
+Explain why the key projection in self-attention matters when bringing up a new transformer inference stack.
+How should an engineer read the shape of query states in self-attention during debugging?
+Give a concise explanation of context vectors in attention in the context of autoregressive text generation.
+What does each dimension mean in the tensor for the padding mask tensor?
+Why does an inference implementation need the bfloat16 data type?
+Give a concise explanation of numerical stability in transformer inference in the context of autoregressive text generation.
+Describe the role of debugging NaNs in model outputs during text generation.
+How should an engineer read the shape of the attention probability matrix during debugging?
+What does each dimension mean in the tensor for value states in self-attention?
+Describe the role of the attention context tensor during text generation.
