@@ -1,5 +1,6 @@
 #pragma once
 
+#include "llama_config.h"
 #include "tensor.h"
 
 void EmbeddingLookup(TokenBatch *tokens, Tensor *embedding, Tensor *output);
@@ -16,8 +17,8 @@ void SplitHeads(Tensor *input, Tensor *output, size_t num_heads,
 void SplitHeads_gpu(Tensor *input, Tensor *output, size_t num_heads,
                     size_t head_dim);
 
-void ApplyRoPE(Tensor *q, Tensor *k, float rope_theta);
-void ApplyRoPE_gpu(Tensor *q, Tensor *k, float rope_theta);
+void ApplyRoPE(Tensor *q, Tensor *k, const LlamaConfig &config);
+void ApplyRoPE_gpu(Tensor *q, Tensor *k, const LlamaConfig &config);
 
 void AttentionScoresGrouped(Tensor *q, Tensor *k, Tensor *scores,
                             size_t num_q_heads, size_t num_kv_heads);

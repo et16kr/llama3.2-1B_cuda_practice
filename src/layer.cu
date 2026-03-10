@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <cstring>
+#include <vector>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -18,28 +19,71 @@ inline size_t flat_rows(Tensor *tensor) {
 
 inline size_t last_dim(Tensor *tensor) { return tensor->shape[tensor->ndim - 1]; }
 
-void apply_rope_tensor(Tensor *tensor, float rope_theta) {
+std::vector<float> build_inv_freq(const LlamaConfig &config, size_t dim) {
+  constexpr float kPi = 3.14159265358979323846f;
+  CHECK_ERROR((dim % 2) == 0, "RoPE head_dim must be even");
+  const size_t half_dim = dim / 2;
+  std::vector<float> inv_freq(half_dim, 0.0f);
+
+  for (size_t idx = 0; idx < half_dim; ++idx) {
+    float exponent = (2.0f * (float)idx) / (float)dim;
+    float inv = 1.0f / powf(config.rope_theta, exponent);
+
+    if (config.rope_type == "llama3") {
+      const float factor = config.rope_factor;
+      const float low_freq_factor = config.rope_low_freq_factor;
+      const float high_freq_factor = config.rope_high_freq_factor;
+      const float old_context_len =
+          (float)config.rope_original_max_position_embeddings;
+
+      CHECK_ERROR(factor > 0.0f, "rope factor must be positive");
+      CHECK_ERROR(high_freq_factor != low_freq_factor,
+                  "llama3 rope freq factors must differ");
+      CHECK_ERROR(old_context_len > 0.0f,
+                  "llama3 rope original context length must be positive");
+
+      const float wavelen = 2.0f * kPi / inv;
+      const float low_freq_wavelen = old_context_len / low_freq_factor;
+      const float high_freq_wavelen = old_context_len / high_freq_factor;
+
+      if (wavelen > low_freq_wavelen) {
+        inv /= factor;
+      } else if (wavelen >= high_freq_wavelen) {
+        const float smooth_factor =
+            (old_context_len / wavelen - low_freq_factor) /
+            (high_freq_factor - low_freq_factor);
+        inv = (1.0f - smooth_factor) * (inv / factor) + smooth_factor * inv;
+      }
+    }
+
+    inv_freq[idx] = inv;
+  }
+
+  return inv_freq;
+}
+
+void apply_rope_tensor(Tensor *tensor, const LlamaConfig &config) {
   const size_t B = tensor->shape[0];
   const size_t H = tensor->shape[1];
   const size_t T = tensor->shape[2];
   const size_t D = tensor->shape[3];
   CHECK_ERROR((D % 2) == 0, "RoPE head_dim must be even");
+  const size_t half_dim = D / 2;
+  const std::vector<float> inv_freq = build_inv_freq(config, D);
 
 #pragma omp parallel for collapse(3)
   for (size_t b = 0; b < B; ++b) {
     for (size_t h = 0; h < H; ++h) {
       for (size_t t = 0; t < T; ++t) {
         float *ptr = tensor->buf + ((b * H + h) * T + t) * D;
-        for (size_t i = 0; i < D; i += 2) {
-          float exponent = (float)i / (float)D;
-          float inv_freq = 1.0f / powf(rope_theta, exponent);
-          float angle = (float)t * inv_freq;
+        for (size_t i = 0; i < half_dim; ++i) {
+          float angle = (float)t * inv_freq[i];
           float c = cosf(angle);
           float s = sinf(angle);
           float x0 = ptr[i];
-          float x1 = ptr[i + 1];
+          float x1 = ptr[i + half_dim];
           ptr[i] = x0 * c - x1 * s;
-          ptr[i + 1] = x0 * s + x1 * c;
+          ptr[i + half_dim] = x1 * c + x0 * s;
         }
       }
     }
@@ -176,16 +220,16 @@ void SplitHeads_gpu(Tensor *input, Tensor *output, size_t num_heads,
   CHECK_CUDA(cudaDeviceSynchronize());
 }
 
-void ApplyRoPE(Tensor *q, Tensor *k, float rope_theta) {
+void ApplyRoPE(Tensor *q, Tensor *k, const LlamaConfig &config) {
   CHECK_ERROR(q->ndim == 4 && k->ndim == 4, "RoPE expects rank-4 tensors");
   CHECK_ERROR(q->shape[2] == k->shape[2] && q->shape[3] == k->shape[3],
               "RoPE sequence/head_dim mismatch");
-  apply_rope_tensor(q, rope_theta);
-  apply_rope_tensor(k, rope_theta);
+  apply_rope_tensor(q, config);
+  apply_rope_tensor(k, config);
 }
 
-void ApplyRoPE_gpu(Tensor *q, Tensor *k, float rope_theta) {
-  ApplyRoPE(q, k, rope_theta);
+void ApplyRoPE_gpu(Tensor *q, Tensor *k, const LlamaConfig &config) {
+  ApplyRoPE(q, k, config);
 
   // TODO(student): Apply RoPE on GPU before attention score computation.
   CHECK_CUDA(cudaDeviceSynchronize());

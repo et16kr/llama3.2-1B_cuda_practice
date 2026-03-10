@@ -71,6 +71,19 @@ LlamaConfig load_llama_config(const char *path) {
       read_required<size_t>(json, "max_position_embeddings");
   cfg.rms_norm_eps = read_optional<float>(json, "rms_norm_eps", 1.0e-5f);
   cfg.rope_theta = read_optional<float>(json, "rope_theta", 10000.0f);
+  cfg.rope_original_max_position_embeddings = cfg.max_position_embeddings;
+  if (json.contains("rope_scaling") && !json.at("rope_scaling").is_null()) {
+    const nlohmann::json &rope_scaling = json.at("rope_scaling");
+    cfg.rope_type = read_optional<std::string>(rope_scaling, "rope_type", "default");
+    cfg.rope_factor = read_optional<float>(rope_scaling, "factor", 1.0f);
+    cfg.rope_low_freq_factor =
+        read_optional<float>(rope_scaling, "low_freq_factor", 1.0f);
+    cfg.rope_high_freq_factor =
+        read_optional<float>(rope_scaling, "high_freq_factor", 1.0f);
+    cfg.rope_original_max_position_embeddings =
+        read_optional<size_t>(rope_scaling, "original_max_position_embeddings",
+                              cfg.max_position_embeddings);
+  }
   cfg.bos_token_id = read_optional<int>(json, "bos_token_id", 0);
   cfg.pad_token_id = read_optional<int>(json, "pad_token_id", -1);
   cfg.eos_token_ids = read_eos_ids(json);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <string>
 #include <vector>
 
 struct LlamaConfig {
@@ -13,6 +14,11 @@ struct LlamaConfig {
   size_t max_position_embeddings = 0;
   float rms_norm_eps = 1.0e-5f;
   float rope_theta = 500000.0f;
+  std::string rope_type = "default";
+  float rope_factor = 1.0f;
+  float rope_low_freq_factor = 1.0f;
+  float rope_high_freq_factor = 1.0f;
+  size_t rope_original_max_position_embeddings = 0;
   int bos_token_id = 0;
   int pad_token_id = -1;
   std::vector<int> eos_token_ids;
