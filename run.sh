@@ -18,4 +18,5 @@ fi
   --model-dir "${MODEL_DIR}" \
   --input "${INPUT_TXT}" \
   --output "${OUTPUT_TXT}" \
-  --main-binary "${MAIN_BIN}"
+  --main-binary "${MAIN_BIN}" \
+  "$@"
