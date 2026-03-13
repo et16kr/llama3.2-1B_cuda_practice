@@ -172,6 +172,37 @@ void transformer_block(size_t layer_idx) {
   std::swap(x, residual);
 }
 
+void transformer_block_gpu(size_t layer_idx) {
+  RMSNorm_gpu(x, input_norm_weight[layer_idx], norm_buf, config_.rms_norm_eps);
+
+  Linear_gpu(norm_buf, q_proj_weight[layer_idx], q_proj);
+  Linear_gpu(norm_buf, k_proj_weight[layer_idx], k_proj);
+  Linear_gpu(norm_buf, v_proj_weight[layer_idx], v_proj);
+
+  SplitHeads_gpu(q_proj, q, config_.num_attention_heads, config_.head_dim());
+  SplitHeads_gpu(k_proj, k, config_.num_key_value_heads, config_.head_dim());
+  SplitHeads_gpu(v_proj, v, config_.num_key_value_heads, config_.head_dim());
+  ApplyRoPE_gpu(q, k, config_);
+
+  AttentionScoresGrouped_gpu(q, k, att_scores, config_.num_attention_heads,
+                             config_.num_key_value_heads);
+  ScaleMaskSoftmax_gpu(att_scores, att_probs, config_.head_dim(), current_tokens);
+  AttentionContextGrouped_gpu(att_probs, v, context, config_.num_attention_heads,
+                              config_.num_key_value_heads);
+  MergeHeads_gpu(context, merged);
+  Linear_gpu(merged, o_proj_weight[layer_idx], attn_out);
+  ResidualAdd_gpu(x, attn_out, residual);
+  std::swap(x, residual);
+
+  RMSNorm_gpu(x, post_attn_norm_weight[layer_idx], norm_buf, config_.rms_norm_eps);
+  Linear_gpu(norm_buf, gate_proj_weight[layer_idx], gate_buf);
+  Linear_gpu(norm_buf, up_proj_weight[layer_idx], up_buf);
+  SiLU_gpu(gate_buf);
+  ElementwiseMul_gpu(gate_buf, up_buf, gated_buf);
+  Linear_gpu(gated_buf, down_proj_weight[layer_idx], mlp_out);
+  ResidualAdd_gpu(x, mlp_out, residual);
+  std::swap(x, residual);
+}
 void llama_forward_cpu(TokenBatch *tokens, Tensor *logits) {
   CHECK_ERROR(tokens->B == current_batch && tokens->T == current_seq,
               "Token batch shape differs from allocated activations");
@@ -189,6 +220,22 @@ void llama_forward_cpu(TokenBatch *tokens, Tensor *logits) {
   LMHead(final_norm, lm_head_weight != nullptr ? lm_head_weight : tok_embeddings, logits);
 }
 
+void llama_forward_gpu(TokenBatch *tokens, Tensor *logits) {
+  CHECK_ERROR(tokens->B == current_batch && tokens->T == current_seq,
+              "Token batch shape differs from allocated activations");
+  CHECK_ERROR(logits->shape[0] == tokens->B && logits->shape[1] == tokens->T &&
+                  logits->shape[2] == config_.vocab_size,
+              "Logits tensor shape mismatch");
+
+  EmbeddingLookup_gpu(tokens, tok_embeddings, x);
+
+  for (size_t layer = 0; layer < config_.num_hidden_layers; ++layer) {
+    transformer_block_gpu(layer);
+  }
+
+  RMSNorm_gpu(x, final_norm_weight, final_norm, config_.rms_norm_eps);
+  LMHead_gpu(final_norm, lm_head_weight != nullptr ? lm_head_weight : tok_embeddings, logits);
+}
 }  // namespace
 
 TokenBatch load_tokens(const char *path) {
@@ -292,7 +339,7 @@ void alloc_activations(size_t batch_size, size_t seq_len) {
 
 void llama_forward(TokenBatch *tokens, Tensor *logits) {
   current_tokens = tokens;
-  llama_forward_cpu(tokens, logits);
+  llama_forward_gpu(tokens, logits);
   current_tokens = nullptr;
 
   // TODO(student): Replace the CPU path with GPU kernels layer by layer.
