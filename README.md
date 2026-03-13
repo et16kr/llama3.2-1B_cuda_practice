@@ -77,6 +77,14 @@ OUTPUT_TXT=./data/responses.txt \
 make run
 ```
 
+입력 파일의 앞쪽 일부 요청만 실행하고 싶으면 `-n` 옵션으로 개수를 제한할 수 있습니다. (default: 32)
+
+```bash
+MODEL_DIR=/path/to/Llama-3.2-1B-Instruct \
+INPUT_TXT=./data/requests.txt \
+./run.sh -n 32
+```
+
 또는:
 
 ```bash

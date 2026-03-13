@@ -19,6 +19,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--input", type=Path, help="Text file with one request per line")
     parser.add_argument("--output", type=Path, default=Path("./data/responses.txt"))
     parser.add_argument("--prompt", help="Single request without an input file")
+    parser.add_argument(
+        "-n",
+        "--num-requests",
+        type=int,
+        default=32,
+        help="Read only the first N requests from the input file",
+    )
     parser.add_argument("--system", default="", help="Optional system prompt")
     parser.add_argument("--main-binary", type=Path, default=PROJECT_ROOT / "main")
     parser.add_argument("--max-new-tokens", type=int, default=64)
@@ -34,7 +41,16 @@ def load_requests(args: argparse.Namespace) -> list[str]:
         return [args.prompt]
     if args.input is None:
         raise ValueError("either --input or --prompt is required")
-    return args.input.read_text(encoding="utf-8").splitlines()
+    if args.num_requests < 0:
+        raise ValueError("--num-requests must be non-negative")
+
+    requests: list[str] = []
+    with args.input.open("r", encoding="utf-8") as f:
+        for line in f:
+            requests.append(line.rstrip("\r\n"))
+            if args.num_requests > 0 and len(requests) >= args.num_requests:
+                break
+    return requests
 
 
 def load_tokenizer(model_dir: Path):
@@ -135,8 +151,14 @@ def write_responses(path: Path, requests: list[str], responses: list[str]) -> No
 
 
 def run_main(args: argparse.Namespace, prompt_tokens: Path, output_tokens: Path) -> None:
+    main_binary = args.main_binary.expanduser()
+    if not main_binary.is_absolute():
+        main_binary = main_binary.resolve()
+    if not main_binary.is_file():
+        raise FileNotFoundError(f"main binary not found: {main_binary}")
+
     cmd = [
-        str(args.main_binary),
+        str(main_binary),
         "-m",
         str(args.model_dir),
         "--token-input",
