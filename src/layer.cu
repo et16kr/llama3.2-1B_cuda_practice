@@ -10,8 +10,9 @@
 
 #include "util.h"
 
+#define TILE_SIZE (32)
 #define BLOCK_SIZE (1024)
-#define CEIL(x) ((x+BLOCK_SIZE-1)/BLOCK_SIZE)
+#define CEIL(x, y) ((x+y-1)/y)
 namespace {
 
 inline size_t flat_rows(Tensor *tensor) {
@@ -63,6 +64,14 @@ std::vector<float> build_inv_freq(const LlamaConfig &config, size_t dim) {
 
   return inv_freq;
 }
+/*
+[build_inv_freq] half_dim: 32
+*/
+
+/*
+[apply_rope_tensor] B: 32, H: 32, T: 56, D: 64, half_dim: 32
+[apply_rope_tensor] B: 32, H: 8, T: 56, D: 64, half_dim: 32
+*/
 
 void apply_rope_tensor(Tensor *tensor, const LlamaConfig &config) {
   const size_t B = tensor->shape[0];
@@ -127,7 +136,7 @@ __global__ void embedding_lookup(int32_t* tokens, float* embedding, float* outpu
   
   output[(b * T * hidden) + (t * hidden) + h] = embedding[(size_t)token_id * hidden + h];
 }
-
+// [EmbeddingLookup_gpu] B: 32, T: 56, hidden: 2048
 void EmbeddingLookup_gpu(TokenBatch *tokens, Tensor *embedding, Tensor *output) {
   CHECK_ERROR(embedding->ndim == 2, "Embedding tensor must be rank 2");
   CHECK_ERROR(output->shape[0] == tokens->B && output->shape[1] == tokens->T,
@@ -142,7 +151,7 @@ void EmbeddingLookup_gpu(TokenBatch *tokens, Tensor *embedding, Tensor *output) 
   const size_t N = B * T * hidden;
 
   // TODO(student): Move embedding lookup to GPU and gather rows directly.
-  dim3 gridDim(CEIL(N));
+  dim3 gridDim(CEIL(N, BLOCK_SIZE));
   dim3 blockDim(BLOCK_SIZE);
   embedding_lookup<<<gridDim, blockDim>>>(tokens->gpu_buf, embedding->gpu_buf, output->gpu_buf, B, T, hidden);
   CHECK_CUDA(cudaDeviceSynchronize());
@@ -174,6 +183,7 @@ void RMSNorm(Tensor *input, Tensor *weight, Tensor *output, float eps) {
   }
 }
 
+// [RMSNorm] rows: 1792, cols: 2048
 void RMSNorm_gpu(Tensor *input, Tensor *weight, Tensor *output, float eps) {
   RMSNorm(input, weight, output, eps);
 
@@ -204,11 +214,50 @@ void Linear(Tensor *input, Tensor *weight, Tensor *output) {
     }
   }
 }
-
+__global__ void linear(float *input, float *weight, float *output, size_t rows, size_t out_dim, size_t in_dim) {
+  size_t ty = threadIdx.y;
+  size_t tx = threadIdx.x;
+  size_t rowi = blockIdx.y * TILE_SIZE + ty;
+  size_t weight_idx = blockIdx.x * TILE_SIZE + ty;
+  __shared__ float LI[TILE_SIZE][TILE_SIZE];
+  __shared__ float LW[TILE_SIZE][TILE_SIZE + 1];
+  input += rowi * in_dim;
+  weight += weight_idx * in_dim;
+  float sum = 0.0f;
+  for (size_t k = 0; k < in_dim; k += TILE_SIZE) {
+    size_t in_idx = k + tx;
+    LI[ty][tx] = (rowi < rows && in_idx < in_dim)           ? input[in_idx] : 0.0f;
+    LW[tx][ty] = (weight_idx < out_dim && in_idx < in_dim ) ? weight[in_idx] : 0.0f;
+    __syncthreads();
+    for (int i = 0 ; i < TILE_SIZE ; i++) {
+      sum += LI[ty][i] * LW[i][tx];
+    }
+    __syncthreads();
+  }
+  if (rowi >= rows) return;
+  size_t roww = blockIdx.x * TILE_SIZE + tx;
+  if (roww >= out_dim) return;
+  output[rowi * out_dim + roww] = sum;
+}
+/*
+[Linear] rows: 1792, out_dim: 512, in_dim: 2048
+[Linear] rows: 1792, out_dim: 2048, in_dim: 2048
+[Linear] rows: 1792, out_dim: 8192, in_dim: 2048
+[Linear] rows: 1792, out_dim: 2048, in_dim: 8192
+*/
 void Linear_gpu(Tensor *input, Tensor *weight, Tensor *output) {
-  Linear(input, weight, output);
+  size_t rows = flat_rows(input);
+  size_t in_dim = last_dim(input);
+  CHECK_ERROR(weight->ndim == 2, "Linear weight must be rank 2");
+  CHECK_ERROR(weight->shape[1] == in_dim, "Linear input dim mismatch");
+
+  size_t out_dim = weight->shape[0];
+  CHECK_ERROR(output->num_elem() == rows * out_dim, "Linear output shape mismatch");
 
   // TODO(student): Replace the CPU reference GEMM with CUDA kernel(s) or cuBLAS.
+  dim3 gridDim(CEIL(out_dim, TILE_SIZE), CEIL(rows, TILE_SIZE));
+  dim3 blockDim(TILE_SIZE, TILE_SIZE);
+  linear<<<gridDim, blockDim>>>(input->gpu_buf, weight->gpu_buf, output->gpu_buf, rows, out_dim, in_dim);
   CHECK_CUDA(cudaDeviceSynchronize());
 }
 
@@ -250,6 +299,9 @@ __global__ void split_heads(float* input, float* output, size_t B, size_t T, siz
   output[dst_idx] = input[src_idx];
 }
 
+// [SplitHeads_gpu] B: 32, T: 32, N: 3670016
+// [SplitHeads_gpu] B: 32, T: 8, N: 917504
+// [SplitHeads_gpu] B: 32, T: 8, N: 917504
 void SplitHeads_gpu(Tensor *input, Tensor *output, size_t num_heads,
                     size_t head_dim) {
   CHECK_ERROR(input->ndim == 3, "SplitHeads input must be rank 3");
@@ -267,7 +319,7 @@ void SplitHeads_gpu(Tensor *input, Tensor *output, size_t num_heads,
   const size_t N = output->num_elem();
 
   // TODO(student): Implement the [B, T, H*D] -> [B, H, T, D] layout transform.
-  dim3 gridDim(CEIL(N));
+  dim3 gridDim(CEIL(N, BLOCK_SIZE));
   dim3 blockDim(BLOCK_SIZE);
   split_heads<<<gridDim, blockDim>>>(input->gpu_buf, output->gpu_buf, B, T, num_heads, head_dim);
   CHECK_CUDA(cudaDeviceSynchronize());
@@ -318,11 +370,42 @@ void AttentionScoresGrouped(Tensor *q, Tensor *k, Tensor *scores,
   }
 }
 
+__global__ void attention_scores_grouped(float *q, float *k, float *scores,
+                                          size_t num_q_heads, size_t num_kv_heads, size_t B, size_t T, size_t D) {
+  size_t x = blockDim.x * blockIdx.x + threadIdx.x;
+  size_t y = blockDim.y * blockIdx.y + threadIdx.y;
+  size_t b = x / num_q_heads;
+  size_t h = x % num_q_heads;
+  size_t tq = y / T;
+  size_t tk = y % T;
+  if (b >= B) return;
+  if (tq >= T) return;
+
+  const size_t kv_head = h / (num_q_heads / num_kv_heads);
+  q += (b * num_q_heads * T * D) + (h * T * D) + (tq * D);
+  k += (b * num_kv_heads * T * D) + (kv_head * T * D) + (tk * D);
+  float sum = 0.0f;
+  for (size_t d = 0; d < D; ++d) {
+    sum += q[d] * k[d];
+  }
+  scores[(b * num_q_heads * T * T) + ( h * T * T) + (tq * T)+ tk] = sum;
+}
+//[AttentionScoresGrouped] B: 32, T: 56, D: 64, num_q_heads: 32, num_kv_heads: 8, heads_per_group: 4
 void AttentionScoresGrouped_gpu(Tensor *q, Tensor *k, Tensor *scores,
                                 size_t num_q_heads, size_t num_kv_heads) {
+  CHECK_ERROR(num_q_heads % num_kv_heads == 0,
+              "num_q_heads must be divisible by num_kv_heads");
+
+  const size_t B = q->shape[0];
+  const size_t T = q->shape[2];
+  const size_t D = q->shape[3];
   AttentionScoresGrouped(q, k, scores, num_q_heads, num_kv_heads);
 
   // TODO(student): Implement grouped-query QK^T on GPU.
+  dim3 gridDim(CEIL(B*num_q_heads, TILE_SIZE),CEIL(T*T, TILE_SIZE));
+  dim3 blockDim(TILE_SIZE, TILE_SIZE);
+  attention_scores_grouped<<<gridDim, blockDim>>>(q->gpu_buf, k->gpu_buf, scores->gpu_buf, num_q_heads, num_kv_heads, B, T, D);
+
   CHECK_CUDA(cudaDeviceSynchronize());
 }
 
@@ -373,6 +456,9 @@ void ScaleMaskSoftmax(Tensor *scores, Tensor *probs, size_t head_dim,
     }
   }
 }
+/*
+[ScaleMaskSoftmax] B: 32, H: 32, T: 56
+*/
 
 void ScaleMaskSoftmax_gpu(Tensor *scores, Tensor *probs, size_t head_dim,
                           const TokenBatch *tokens) {
@@ -412,11 +498,41 @@ void AttentionContextGrouped(Tensor *probs, Tensor *v, Tensor *context,
   }
 }
 
+__global__ void attention_context_grouped(float *probs, float *v, float *context,
+                                          size_t num_q_heads, size_t num_kv_heads, size_t B, size_t T, size_t D) {
+  size_t x = blockDim.x * blockIdx.x + threadIdx.x;
+  size_t y = blockDim.y * blockIdx.y + threadIdx.y;
+  size_t b = x / num_q_heads;
+  size_t h = x % num_q_heads;
+  size_t tq = y / D;
+  size_t d = y % D;
+  if (b >= B) return;
+  if (tq >= T) return;
+
+  const size_t kv_head = h / ( num_q_heads / num_kv_heads);
+  probs += ((b * num_q_heads + h) * T + tq) * T;
+  v += (b * num_kv_heads * T  * D ) + (kv_head * T  * D);
+  float sum = 0.0f;
+  for (size_t tk = 0; tk < T; ++tk) {
+    sum += probs[tk] * v[(tk * D) + d];
+  }
+  context[(b * num_q_heads * T * D ) + ( h * T * D ) + (tq * D) + d] = sum;
+}
+
+// [AttentionContextGrouped_gpu] B: 32, T: 56, D: 64, num_q_heads: 32, num_kv_heads: 8, heads_per_group: 4
 void AttentionContextGrouped_gpu(Tensor *probs, Tensor *v, Tensor *context,
                                  size_t num_q_heads, size_t num_kv_heads) {
-  AttentionContextGrouped(probs, v, context, num_q_heads, num_kv_heads);
+  CHECK_ERROR(num_q_heads % num_kv_heads == 0,
+              "num_q_heads must be divisible by num_kv_heads");
+
+  const size_t B = probs->shape[0];
+  const size_t T = probs->shape[2];
+  const size_t D = v->shape[3];
 
   // TODO(student): Implement grouped-query AV on GPU.
+  dim3 gridDim(CEIL(B*num_q_heads, TILE_SIZE),CEIL(T*D, TILE_SIZE));
+  dim3 blockDim(TILE_SIZE, TILE_SIZE);
+  attention_context_grouped<<<gridDim, blockDim>>>(probs->gpu_buf, v->gpu_buf, context->gpu_buf, num_q_heads, num_kv_heads, B, T, D);
   CHECK_CUDA(cudaDeviceSynchronize());
 }
 
@@ -438,6 +554,7 @@ void MergeHeads(Tensor *context, Tensor *merged) {
   }
 }
 
+// [MergeHeads_gpu] B: 32, H: 32, T: 56, D: 64, N: 3670016
 __global__ void merge_heads(float* context, float* merged, size_t B, size_t H, size_t T, size_t D) {
   size_t idx = blockDim.x * blockIdx.x + threadIdx.x;
   size_t b = idx / (T*H*D);
@@ -455,7 +572,7 @@ void MergeHeads_gpu(Tensor *context, Tensor *merged) {
   const size_t D = context->shape[3];
   const size_t N = context->num_elem();
 
-  dim3 gridDim(CEIL(N));
+  dim3 gridDim(CEIL(N, BLOCK_SIZE));
   dim3 blockDim(BLOCK_SIZE);
   // TODO(student): Implement the [B, H, T, D] -> [B, T, H*D] layout transform.
   merge_heads<<<gridDim, blockDim>>>(context->gpu_buf, merged->gpu_buf, B, H, T, D);
@@ -480,11 +597,12 @@ __global__ void residual_add(float *input, float *addend, float*output, size_t N
   output[n] = input[n] + addend[n];
 }
 
+// [ResidualAdd_gpu] N: 3670016
 void ResidualAdd_gpu(Tensor *input, Tensor *addend, Tensor *output) {
   size_t N = input->num_elem();
   CHECK_ERROR(N == addend->num_elem() && N == output->num_elem(),
               "ResidualAdd shape mismatch");
-  dim3 gridDim(CEIL(N));
+  dim3 gridDim(CEIL(N, BLOCK_SIZE));
   dim3 blockDim(BLOCK_SIZE);
   residual_add<<<gridDim, blockDim>>>(input->gpu_buf, addend->gpu_buf, output->gpu_buf, N);
   CHECK_CUDA(cudaDeviceSynchronize());
@@ -505,9 +623,10 @@ __global__ void silu(float* inout, size_t N) {
   inout[n] = x / (1.0f + expf(-x));
 }
 
+//[SiLU_gpu] N: 14680064
 void SiLU_gpu(Tensor *inout) {
   size_t N = inout->num_elem();
-  dim3 gridDim(CEIL(N));
+  dim3 gridDim(CEIL(N, BLOCK_SIZE));
   dim3 blockDim(BLOCK_SIZE);
   silu<<<gridDim, blockDim>>>(inout->gpu_buf, N);
   CHECK_CUDA(cudaDeviceSynchronize());
@@ -530,13 +649,14 @@ __global__ void elementwise_mul(float *lhs, float *rhs, float*output, size_t N) 
   output[n] = lhs[n] * rhs[n];
 }
 
+// [ElementwiseMul_gpu] N: 14680064
 void ElementwiseMul_gpu(Tensor *lhs, Tensor *rhs, Tensor *output) {
   CHECK_ERROR(lhs->num_elem() == rhs->num_elem() &&
                   lhs->num_elem() == output->num_elem(),
               "ElementwiseMul shape mismatch");
 
   size_t N = lhs->num_elem();
-  dim3 gridDim(CEIL(N));
+  dim3 gridDim(CEIL(N, BLOCK_SIZE));
   dim3 blockDim(BLOCK_SIZE);
   elementwise_mul<<<gridDim, blockDim>>>(lhs->gpu_buf, rhs->gpu_buf, output->gpu_buf, N);
   CHECK_CUDA(cudaDeviceSynchronize());
@@ -567,9 +687,49 @@ void LMHead(Tensor *input, Tensor *weight, Tensor *output) {
   }
 }
 
+__global__ void lmhead(float* input, float* weight, float* output, size_t rows, size_t vocab_size, size_t hidden) {
+  size_t ty = threadIdx.y;
+  size_t tx = threadIdx.x;
+  size_t row = blockIdx.y * TILE_SIZE + ty;
+  size_t weight_idx = blockIdx.x * TILE_SIZE + ty;
+  __shared__ float LI[TILE_SIZE][TILE_SIZE];
+  __shared__ float LW[TILE_SIZE][TILE_SIZE + 1];
+  input += row * hidden;
+  weight += weight_idx * hidden;
+  float sum = 0.0f;
+  for (size_t c = 0; c < hidden; c += TILE_SIZE) {
+    size_t in_idx = c + tx;
+    LI[ty][tx] = (row < rows && in_idx < hidden)               ? input[in_idx] : 0.0f;
+    LW[tx][ty] = (weight_idx < vocab_size && in_idx < hidden ) ? weight[in_idx] : 0.0f;
+    __syncthreads();
+    for (int i = 0 ; i < TILE_SIZE ; i++) {
+      sum += LI[ty][i] * LW[i][tx];
+    }
+    __syncthreads();
+  }
+  if (row >= rows) return;
+   size_t vocab = blockDim.x * blockIdx.x + threadIdx.x;
+ if (vocab >= vocab_size) return;
+  output[row * vocab_size + vocab] = sum;
+}
+
+// [LMHead_gpu] rows: 1792, vocab_size: 128256, hidden: 2048
+// [LMHead_gpu] rows: 1824, vocab_size: 128256, hidden: 2048
+// [LMHead_gpu] rows: 1856, vocab_size: 128256, hidden: 2048
+// [LMHead_gpu] rows: 1888, vocab_size: 128256, hidden: 2048
 void LMHead_gpu(Tensor *input, Tensor *weight, Tensor *output) {
-  LMHead(input, weight, output);
+  size_t rows = flat_rows(input);
+  size_t hidden = last_dim(input);
+  CHECK_ERROR(weight->ndim == 2 && weight->shape[1] == hidden,
+              "LMHead weight shape mismatch");
+  CHECK_ERROR(output->num_elem() == rows * weight->shape[0],
+              "LMHead output shape mismatch");
+
+  const size_t vocab_size = weight->shape[0];
 
   // TODO(student): Replace the vocab projection with GPU code.
+  dim3 gridDim(CEIL(vocab_size, TILE_SIZE), CEIL(rows, TILE_SIZE));
+  dim3 blockDim(TILE_SIZE, TILE_SIZE);
+  lmhead<<<gridDim, blockDim>>>(input->gpu_buf, weight->gpu_buf, output->gpu_buf, rows, vocab_size, hidden);
   CHECK_CUDA(cudaDeviceSynchronize());
 }
