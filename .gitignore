@@ -2,5 +2,8 @@ main
 obj/
 data/logits*.bin
 data/generated_tokens*.bin
+data/nsys_*.bin
+data/ncu_generated_tokens.bin
 data/responses*.txt
+profiles/
 scripts/__pycache__/

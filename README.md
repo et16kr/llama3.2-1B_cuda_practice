@@ -104,6 +104,67 @@ python3 ./scripts/run_text_generation.py \
         --prompt "CUDA 커널 최적화 순서를 설명해줘"
 ```
 
+### 2-1. `nsys`로 추론 구간만 프로파일링
+
+`nsys`가 설치되어 있다면 `cudaProfilerStart/Stop` 기반 capture range를 사용할 수 있습니다.
+이 저장소는 `--cuda-profiler-range` 옵션을 지원하므로, 모델 로딩과 optional warm-up을 제외한
+실제 추론 구간만 수집할 수 있습니다.
+
+가장 간단한 방법은 Python wrapper 전체를 `nsys`로 실행하는 것입니다.
+
+```bash
+nsys profile \
+  --trace=cuda,osrt \
+  --sample=none \
+  --capture-range=cudaProfilerApi \
+  --capture-range-end=stop \
+  --force-overwrite=true \
+  --output=./profiles/llama_gen \
+  python3 ./scripts/run_text_generation.py \
+    --model-dir /path/to/Llama-3.2-1B-Instruct \
+    --input ./data/requests.txt \
+    --output ./data/responses.txt \
+    --num-requests 4 \
+    --max-new-tokens 16 \
+    --warmup \
+    --cuda-profiler-range
+```
+
+프로파일 결과 요약은 아래처럼 확인할 수 있습니다.
+
+```bash
+nsys stats \
+  --report cuda_gpu_kern_sum,cuda_api_sum \
+  ./profiles/llama_gen.nsys-rep
+```
+
+`--capture-range-end=stop`은 프로파일링만 중지하고 프로그램은 계속 실행하므로,
+출력 파일까지 정상적으로 남기고 싶을 때 더 안전합니다.
+
+Python 토크나이징 구간을 빼고 `main`만 더 깔끔하게 보고 싶다면, 먼저 token batch를 남긴 뒤 `main`을 직접 프로파일링하면 됩니다.
+
+```bash
+python3 ./scripts/run_text_generation.py \
+        --model-dir /path/to/Llama-3.2-1B-Instruct \
+        --input ./data/requests.txt \
+        --output ./data/responses.txt \
+        --keep-temp
+
+nsys profile \
+  --trace=cuda,osrt \
+  --sample=none \
+  --capture-range=cudaProfilerApi \
+  --capture-range-end=stop \
+  --force-overwrite=true \
+  --output=./profiles/llama_main \
+  ./main -m /path/to/Llama-3.2-1B-Instruct \
+    --token-input ./data/responses.tmp/prompt_tokens.bin \
+    --token-output ./data/generated_tokens.bin \
+    --max-new-tokens 16 \
+    --warmup \
+    --cuda-profiler-range
+```
+
 ### 3. `main` 직접 실행
 
 Python wrapper가 내부적으로 token file을 만들어 `main`을 호출합니다. 아래는 디버깅이나 실험용 직접 실행 예시입니다.
