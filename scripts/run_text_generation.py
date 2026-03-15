@@ -32,6 +32,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--context-len", type=int, default=0)
     parser.add_argument("--validate", action="store_true")
     parser.add_argument("--warmup", action="store_true")
+    parser.add_argument("--cuda-profiler-range", action="store_true")
     parser.add_argument("--keep-temp", action="store_true")
     return parser
 
@@ -174,6 +175,8 @@ def run_main(args: argparse.Namespace, prompt_tokens: Path, output_tokens: Path)
         cmd.append("--validate")
     if args.warmup:
         cmd.append("--warmup")
+    if args.cuda_profiler_range:
+        cmd.append("--cuda-profiler-range")
 
     subprocess.run(cmd, check=True)
 

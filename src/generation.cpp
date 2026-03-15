@@ -1,5 +1,7 @@
 #include "generation.h"
 
+#include <cuda_profiler_api.h>
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdio>
@@ -103,6 +105,20 @@ void maybe_warmup_batch(const CliOptions &options,
   *did_warmup = true;
 }
 
+void maybe_start_cuda_profiler_range(const CliOptions &options) {
+  if (!options.cuda_profiler_range) {
+    return;
+  }
+  CHECK_CUDA(cudaProfilerStart());
+}
+
+void maybe_stop_cuda_profiler_range(const CliOptions &options) {
+  if (!options.cuda_profiler_range) {
+    return;
+  }
+  CHECK_CUDA(cudaProfilerStop());
+}
+
 void write_token_sequences(const char *path, const std::vector<std::vector<int>> &sequences,
                            int pad_token_id) {
   std::ofstream output(path, std::ios::binary);
@@ -147,6 +163,7 @@ void run_generation_mode(const CliOptions &options) {
   bool did_warmup = false;
 
   maybe_warmup_batch(options, sequences, context_len, pad_token_id, &did_warmup);
+  maybe_start_cuda_profiler_range(options);
 
   double total_elapsed = 0.0;
   for (int step = 0; step < options.max_new_tokens; ++step) {
@@ -189,6 +206,7 @@ void run_generation_mode(const CliOptions &options) {
       sequences[b].push_back(next_token);
     }
   }
+  maybe_stop_cuda_profiler_range(options);
 
   size_t generated = 0;
   for (const std::vector<int> &tokens : completions) {
@@ -221,9 +239,11 @@ void run_forward_only_mode(const CliOptions &options) {
     llama_forward(&tokens, &logits);
   }
 
+  maybe_start_cuda_profiler_range(options);
   double st = get_time();
   llama_forward(&tokens, &logits);
   double et = get_time();
+  maybe_stop_cuda_profiler_range(options);
 
   printf("Elapsed time: %.6f sec\n", et - st);
   printf("Throughput  : %.3f tokens/sec\n", (double)(tokens.B * tokens.T) / (et - st));

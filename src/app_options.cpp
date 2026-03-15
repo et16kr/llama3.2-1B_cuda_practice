@@ -37,6 +37,8 @@ CliOptions parse_args(int argc, char **argv) {
       options.run_validation = true;
     } else if (arg == "-w" || arg == "--warmup") {
       options.run_warmup = true;
+    } else if (arg == "--cuda-profiler-range") {
+      options.cuda_profiler_range = true;
     } else if (arg == "-h" || arg == "--help") {
       options.help = true;
     } else {
@@ -57,7 +59,8 @@ void print_help(const CliOptions &defaults) {
   printf("  -c, --context-len N        Context window used during generation\n");
   printf("  -n, --max-new-tokens N     Greedy generation length (default: 64)\n");
   printf("  -v, --validate             Compare forward output against CPU reference\n");
-  printf("  -w, --warmup               Warm up once before generation\n\n");
+  printf("  -w, --warmup               Warm up once before generation\n");
+  printf("      --cuda-profiler-range  Wrap timed inference with cudaProfilerStart/Stop\n\n");
   printf("Forward-only mode:\n");
   printf("      --logits-output PATH   Write binary logits instead of generated tokens\n\n");
   printf("Token batch format:\n");

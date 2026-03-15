@@ -11,6 +11,7 @@ struct CliOptions {
   int max_new_tokens = 64;
   bool run_validation = false;
   bool run_warmup = false;
+  bool cuda_profiler_range = false;
   bool help = false;
 };
 
