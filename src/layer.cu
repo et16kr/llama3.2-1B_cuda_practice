@@ -183,11 +183,48 @@ void RMSNorm(Tensor *input, Tensor *weight, Tensor *output, float eps) {
   }
 }
 
+__global__ void rms_norm(float *input, float *weight, float *output, float eps, size_t cols) {
+  size_t row = blockIdx.x;
+  size_t idx = threadIdx.x;
+  __shared__ float L[BLOCK_SIZE];
+  input += row * cols;
+  output += row * cols;
+
+  float mean_sq = 0.0f;
+  for (size_t col = idx; col < cols; col += blockDim.x) {
+    mean_sq += input[col] * input[col];
+  }
+  L[idx] = mean_sq;
+
+  for(int i = blockDim.x/2 ; i > 0 ; i /= 2) {
+    __syncthreads();
+    if (idx < i) L[idx] += L[idx + i];
+  }
+  __shared__ float scale ;
+  if (idx == 0) {
+    mean_sq = L[0] / (float)cols;
+    scale = rsqrtf(mean_sq + eps);
+  }
+  __syncthreads();
+  
+  for (size_t col = idx; col < cols; col += blockDim.x) {
+    output[col] = input[col] * scale * weight[col];
+  }
+}
+
 // [RMSNorm] rows: 1792, cols: 2048
 void RMSNorm_gpu(Tensor *input, Tensor *weight, Tensor *output, float eps) {
-  RMSNorm(input, weight, output, eps);
+  size_t rows = flat_rows(input);
+  size_t cols = last_dim(input);
+  CHECK_ERROR(weight->ndim == 1 && weight->shape[0] == cols,
+              "RMSNorm parameter shape mismatch");
+  CHECK_ERROR(output->num_elem() == input->num_elem(),
+              "RMSNorm output shape mismatch");
 
   // TODO(student): Implement row-wise RMSNorm reduction on GPU.
+  dim3 gridDim(rows);
+  dim3 blockDim(BLOCK_SIZE);
+  rms_norm<<<gridDim, blockDim>>>(input->gpu_buf, weight->gpu_buf, output->gpu_buf, eps, cols);
   CHECK_CUDA(cudaDeviceSynchronize());
 }
 
@@ -333,6 +370,7 @@ void ApplyRoPE(Tensor *q, Tensor *k, const LlamaConfig &config) {
   apply_rope_tensor(k, config);
 }
 
+// XXX
 void ApplyRoPE_gpu(Tensor *q, Tensor *k, const LlamaConfig &config) {
   ApplyRoPE(q, k, config);
 
@@ -399,7 +437,6 @@ void AttentionScoresGrouped_gpu(Tensor *q, Tensor *k, Tensor *scores,
   const size_t B = q->shape[0];
   const size_t T = q->shape[2];
   const size_t D = q->shape[3];
-  AttentionScoresGrouped(q, k, scores, num_q_heads, num_kv_heads);
 
   // TODO(student): Implement grouped-query QK^T on GPU.
   dim3 gridDim(CEIL(B*num_q_heads, TILE_SIZE),CEIL(T*T, TILE_SIZE));
@@ -459,7 +496,7 @@ void ScaleMaskSoftmax(Tensor *scores, Tensor *probs, size_t head_dim,
 /*
 [ScaleMaskSoftmax] B: 32, H: 32, T: 56
 */
-
+// XXX
 void ScaleMaskSoftmax_gpu(Tensor *scores, Tensor *probs, size_t head_dim,
                           const TokenBatch *tokens) {
   ScaleMaskSoftmax(scores, probs, head_dim, tokens);
