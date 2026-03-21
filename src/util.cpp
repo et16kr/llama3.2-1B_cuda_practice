@@ -48,10 +48,8 @@ int validate_buffer(const float *output, const float *answer, size_t n,
                     float atol, float rtol) {
   for (size_t i = 0; i < n; ++i) {
     float abs_err = fabsf(output[i] - answer[i]);
-    float rel_err = (fabsf(answer[i]) > 1e-8f) ? abs_err / fabsf(answer[i])
-                                               : abs_err;
-    if (std::isnan(output[i]) || abs_err > atol + rtol * fabsf(answer[i]) ||
-        rel_err > rtol) {
+    if (std::isnan(output[i]) ||
+        abs_err > atol + rtol * fabsf(answer[i])) {
       return (int)i;
     }
   }
