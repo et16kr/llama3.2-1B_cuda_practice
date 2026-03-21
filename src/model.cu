@@ -150,7 +150,7 @@ void transformer_block(size_t layer_idx) {
   SplitHeads(q_proj, q, config_.num_attention_heads, config_.head_dim());
   SplitHeads(k_proj, k, config_.num_key_value_heads, config_.head_dim());
   SplitHeads(v_proj, v, config_.num_key_value_heads, config_.head_dim());
-  ApplyRoPE(q, k, config_);
+  ApplyRoPE(q, k);
 
   AttentionScoresGrouped(q, k, att_scores, config_.num_attention_heads,
                          config_.num_key_value_heads);
@@ -182,7 +182,7 @@ void transformer_block_gpu(size_t layer_idx) {
   SplitHeads_gpu(q_proj, q, config_.num_attention_heads, config_.head_dim());
   SplitHeads_gpu(k_proj, k, config_.num_key_value_heads, config_.head_dim());
   SplitHeads_gpu(v_proj, v, config_.num_key_value_heads, config_.head_dim());
-  ApplyRoPE_gpu(q, k, config_);
+  ApplyRoPE_gpu(q, k);
 
   AttentionScoresGrouped_gpu(q, k, att_scores, config_.num_attention_heads,
                              config_.num_key_value_heads);

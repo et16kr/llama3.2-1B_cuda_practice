@@ -7,3 +7,4 @@ data/ncu_generated_tokens.bin
 data/responses*.txt
 profiles/
 scripts/__pycache__/
+.venv/

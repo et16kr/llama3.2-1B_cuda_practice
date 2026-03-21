@@ -1,0 +1,7 @@
+-r requirements.txt
+
+# Optional dependencies for Hugging Face verification/comparison scripts.
+# If you want GPU-backed HF runs, install the CUDA-matched PyTorch wheel for your system.
+numpy>=1.24.0
+safetensors>=0.4.5
+torch>=2.4.0

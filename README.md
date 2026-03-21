@@ -20,7 +20,9 @@ CUDA 연습용 Llama 3.2 1B inference 프로젝트입니다.
 - CUDA Toolkit과 `nvcc`
 - C++17 지원 컴파일러
 - Python 3
-- Python 패키지: `transformers`, `tokenizers`, `sentencepiece`, `jinja2`
+- Python 패키지
+  - 기본 실행용: `requirements.txt`
+  - Hugging Face 검증/비교 스크립트까지 쓸 경우: `requirements-hf.txt`
 - 로컬 모델 디렉터리
 
 모델 디렉터리에는 최소한 아래 파일들이 있어야 합니다.
@@ -57,6 +59,34 @@ CUDA 연습용 Llama 3.2 1B inference 프로젝트입니다.
 
 ```bash
 make
+```
+
+## Python 환경 준비
+
+Ubuntu처럼 system Python에 `pip install`이 막혀 있는 환경에서는 프로젝트 가상환경을 쓰는 편이 가장 안전합니다.
+
+기본 wrapper만 쓸 경우:
+
+```bash
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+Hugging Face 검증/비교 스크립트까지 쓸 경우:
+
+```bash
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements-hf.txt
+```
+
+시스템 Python에 정말 직접 설치해야 한다면 아래처럼 가능은 하지만 권장하지 않습니다.
+
+```bash
+python3 -m pip install --break-system-packages -r requirements.txt
 ```
 
 ## 실행
