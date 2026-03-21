@@ -265,7 +265,7 @@ void SplitHeads_gpu(Tensor *input, Tensor *output, size_t num_heads,
   CHECK_ERROR(input->ndim == 3, "SplitHeads input must be rank 3");
   CHECK_ERROR(output->ndim == 4, "SplitHeads output must be rank 4");
   CHECK_ERROR(input->shape[0] == output->shape[0] &&
-                  input->shape[1] == output->shape[2],
+              input->shape[1] == output->shape[2],
               "SplitHeads batch/sequence shape mismatch");
   CHECK_ERROR(input->shape[2] == num_heads * head_dim,
               "SplitHeads hidden size mismatch");
@@ -273,7 +273,7 @@ void SplitHeads_gpu(Tensor *input, Tensor *output, size_t num_heads,
               "SplitHeads output head shape mismatch");
 
   const size_t B = output->shape[0];
-  const size_t T = output->shape[1];
+  const size_t T = output->shape[2];
   const size_t N = output->num_elem();
 
   // TODO(student): Implement the [B, T, H*D] -> [B, H, T, D] layout transform.

@@ -341,6 +341,7 @@ void llama_forward(TokenBatch *tokens, Tensor *logits) {
   current_tokens = tokens;
   llama_forward_gpu(tokens, logits);
   current_tokens = nullptr;
+  logits->to_cpu();
 
   // TODO(student): Replace the CPU path with GPU kernels layer by layer.
   CHECK_CUDA(cudaDeviceSynchronize());
