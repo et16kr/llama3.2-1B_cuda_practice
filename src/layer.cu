@@ -565,13 +565,60 @@ void ScaleMaskSoftmax(Tensor *scores, Tensor *probs, size_t head_dim,
     }
   }
 }
+__global__ void scale_mask_softmax(float *scores, float *probs, int32_t* lengths, size_t B, size_t H, size_t T, float scale) {
+  const size_t idx = blockDim.x* blockIdx.x + threadIdx.x;
+  const size_t b = idx / (H * T);
+  const size_t h = idx / T % H;
+  const size_t tq = idx % T;
+  if ( b >= B ) return;
+  const size_t valid_t = (size_t)lengths[b];
+  const size_t row_base = ((b * H + h) * T + tq) * T;
+  if (tq >= valid_t) {
+    for (size_t tk = 0; tk < T; ++tk) {
+      probs[row_base + tk] = 0.0f;
+    }
+    return;
+  }
+
+  float row_max = -1e30f;
+  const size_t row_end = min(tq, valid_t - 1);
+  for (size_t tk = row_end+1; tk < T; ++tk) {
+      probs[row_base + tk] = 0.0f;
+  }
+  for (size_t tk = 0; tk <= row_end; ++tk) {
+    float value = scores[row_base + tk] * scale;
+    row_max = fmaxf(row_max, value);
+  }
+
+  float sum = 0.0f;
+  for (size_t tk = 0; tk <= row_end; ++tk) {
+    float value = scores[row_base + tk] * scale;
+    float e = expf(value - row_max);
+    probs[row_base + tk] = e;
+    sum += e;
+  }
+
+  for (size_t tk = 0; tk <= row_end; ++tk) {
+    probs[row_base + tk] /= sum;
+  }
+}
 /*
 [ScaleMaskSoftmax] B: 32, H: 32, T: 56
 */
 // XXX
 void ScaleMaskSoftmax_gpu(Tensor *scores, Tensor *probs, size_t head_dim,
                           const TokenBatch *tokens) {
-  ScaleMaskSoftmax(scores, probs, head_dim, tokens);
+  const size_t B = scores->shape[0];
+  const size_t H = scores->shape[1];
+  const size_t T = scores->shape[2];
+  const size_t N = B * H * T;
+  const float scale = 1.0f / sqrtf((float)head_dim);
+  CHECK_ERROR( tokens != nullptr, "tokens is null!!");
+  CHECK_ERROR( tokens->gpu_lengths != nullptr, "tokens->lengths is null!!");
+
+  dim3 gridDim(CEIL(N, BLOCK_SIZE));
+  dim3 blockDim(BLOCK_SIZE);
+  scale_mask_softmax<<<gridDim, blockDim>>>(scores->gpu_buf, probs->gpu_buf, tokens->gpu_lengths, B, H, T, scale);
 
   // TODO(student): Fuse scaling, causal masking, and softmax on GPU.
   CHECK_CUDA(cudaDeviceSynchronize());
